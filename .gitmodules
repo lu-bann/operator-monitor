@@ -1,0 +1,3 @@
+[submodule "linglong"]
+	path = linglong
+	url = git@github.com:lu-bann/linglong.git
