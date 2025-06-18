@@ -13,9 +13,15 @@ from web3 import Web3
 from datetime import datetime
 import logging
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+
 # Slack integration
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -516,7 +522,7 @@ def main():
     print(f"📄 Contract: {CONTRACT_ADDRESS}")
     print(f"🔍 Block Explorer: {network_config['block_explorer']}")
     
-    if CONTRACT_ADDRESS == "0x0000000000000000000000000000000000000000" or CONTRACT_ADDRESS == "0x2725F18FD97A99a3105C86331d253C431345CF30":
+    if CONTRACT_ADDRESS == "0x0000000000000000000000000000000000000000":
         print("❌ ERROR: Please set the CONTRACT_ADDRESS environment variable")
         print("Example: export CONTRACT_ADDRESS='0x1234567890123456789012345678901234567890'")
         return
