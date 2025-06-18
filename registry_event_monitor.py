@@ -61,7 +61,7 @@ NETWORK_CONFIGS = {
 
 class RegistryEventMonitor:
     def __init__(self, rpc_url: str, contract_address: str, network: str = 'mainnet', 
-                 slack_token: str = None, slack_channel: str = None):
+                 slack_token: str = None, slack_channel: str = None, chunk_size: int = 50000):
         """
         Initialize the Registry Event Monitor
         
@@ -74,6 +74,7 @@ class RegistryEventMonitor:
         """
         self.network = network.lower()
         self.network_config = NETWORK_CONFIGS.get(self.network, NETWORK_CONFIGS['mainnet'])
+        self.chunk_size = chunk_size
         
         self.web3 = Web3(Web3.HTTPProvider(rpc_url))
         
@@ -414,7 +415,7 @@ class RegistryEventMonitor:
 
     def get_historical_events(self, from_block=0, to_block='latest', max_events=100):
         """
-        Get historical events from the contract using improved pattern
+        Get historical events from the contract using improved pattern with chunking
         
         Args:
             from_block: Starting block number
@@ -424,6 +425,18 @@ class RegistryEventMonitor:
         logger.info(f"Fetching historical events from block {from_block} to {to_block}")
         
         try:
+            # Get the actual end block number
+            if to_block == 'latest':
+                end_block = self.web3.eth.block_number
+            else:
+                end_block = int(to_block)
+            
+            # Calculate the total range
+            total_range = end_block - from_block
+            
+            # Use configurable chunk size to avoid RPC limits (default 50K blocks per chunk)
+            chunk_size = self.chunk_size
+            
             all_events = []
             
             # Use contract event filters for historical data - more reliable approach
@@ -432,26 +445,40 @@ class RegistryEventMonitor:
                 'CollateralClaimed', 'CollateralAdded', 'OperatorOptedIn', 'OperatorOptedOut'
             ]
             
-            for event_name in event_types:
-                try:
-                    event_filter = getattr(self.contract.events, event_name).create_filter(
-                        fromBlock=from_block,
-                        toBlock=to_block
-                    )
-                    
-                    # Get all entries for this event type
-                    events = event_filter.get_all_entries()
-                    all_events.extend(events)
-                    
-                except Exception as e:
-                    logger.warning(f"Error fetching {event_name} events: {e}")
-                    continue
+            logger.info(f"Total block range: {total_range} blocks, using chunks of {chunk_size}")
+            
+            # Process in chunks to avoid RPC limits
+            current_block = from_block
+            chunk_count = 0
+            
+            while current_block <= end_block:
+                chunk_end = min(current_block + chunk_size - 1, end_block)
+                chunk_count += 1
+                
+                logger.info(f"Processing chunk {chunk_count}: blocks {current_block} to {chunk_end}")
+                
+                for event_name in event_types:
+                    try:
+                        event_filter = getattr(self.contract.events, event_name).create_filter(
+                            fromBlock=current_block,
+                            toBlock=chunk_end
+                        )
+                        
+                        # Get all entries for this event type in this chunk
+                        events = event_filter.get_all_entries()
+                        all_events.extend(events)
+                        
+                    except Exception as e:
+                        logger.warning(f"Error fetching {event_name} events for blocks {current_block}-{chunk_end}: {e}")
+                        continue
+                
+                current_block = chunk_end + 1
             
             # Limit results
             if len(all_events) > max_events:
                 all_events = all_events[-max_events:]  # Get most recent events
             
-            logger.info(f"Found {len(all_events)} historical events")
+            logger.info(f"Found {len(all_events)} historical events across {chunk_count} chunks")
             
             # Sort events by block number and transaction index
             all_events.sort(key=lambda x: (x['blockNumber'], x['transactionIndex']))
@@ -504,7 +531,7 @@ def main():
     
     # Configuration - All via environment variables
     RPC_URL = os.getenv('RPC_URL', network_config['default_rpc'])
-    CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS', "0x2725F18FD97A99a3105C86331d253C431345CF30")
+    CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS')
     
     # Slack configuration
     SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN', None)
@@ -514,6 +541,7 @@ def main():
     SHOW_HISTORY = os.getenv('SHOW_HISTORY', 'false').lower() in ('true', '1', 'yes', 'y')
     FROM_BLOCK = os.getenv('FROM_BLOCK', '')
     USE_RECONNECTION = os.getenv('USE_RECONNECTION', 'true').lower() in ('true', '1', 'yes', 'y')
+    CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '50000'))
     
     print("🔍 Registry Event Monitor")
     print("="*50)
@@ -538,6 +566,7 @@ def main():
     # Display configuration
     print(f"📚 Show history: {SHOW_HISTORY}")
     print(f"🔄 Auto-reconnection: {USE_RECONNECTION}")
+    print(f"📦 Chunk size: {CHUNK_SIZE} blocks")
     if SHOW_HISTORY and FROM_BLOCK:
         print(f"📦 Starting from block: {FROM_BLOCK}")
     
@@ -548,7 +577,8 @@ def main():
             CONTRACT_ADDRESS,
             network=NETWORK,
             slack_token=SLACK_BOT_TOKEN,
-            slack_channel=SLACK_CHANNEL
+            slack_channel=SLACK_CHANNEL,
+            chunk_size=CHUNK_SIZE
         )
         
         # Test Slack connection if enabled
