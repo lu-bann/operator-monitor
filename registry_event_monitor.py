@@ -6,13 +6,10 @@ This program listens to all events emitted from the Registry.sol contract
 and prints them in real-time as they occur on the blockchain.
 """
 
-import json
-import time
 import asyncio
 import os
 from typing import Dict, Any, List
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
 from datetime import datetime
 import logging
 
@@ -33,29 +30,25 @@ NETWORK_CONFIGS = {
         'name': 'Ethereum Mainnet',
         'chain_id': 1,
         'default_rpc': 'https://eth.llamarpc.com',
-        'block_explorer': 'https://etherscan.io',
-        'requires_poa': False
+        'block_explorer': 'https://etherscan.io'
     },
     'holesky': {
         'name': 'Holesky Testnet',
         'chain_id': 17000,
         'default_rpc': 'https://ethereum-holesky.publicnode.com',
-        'block_explorer': 'https://holesky.etherscan.io',
-        'requires_poa': True
+        'block_explorer': 'https://holesky.etherscan.io'
     },
     'goerli': {
         'name': 'Goerli Testnet',
         'chain_id': 5,
         'default_rpc': 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-        'block_explorer': 'https://goerli.etherscan.io',
-        'requires_poa': True
+        'block_explorer': 'https://goerli.etherscan.io'
     },
     'sepolia': {
         'name': 'Sepolia Testnet',
         'chain_id': 11155111,
         'default_rpc': 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-        'block_explorer': 'https://sepolia.etherscan.io',
-        'requires_poa': True
+        'block_explorer': 'https://sepolia.etherscan.io'
     }
 }
 
@@ -77,10 +70,6 @@ class RegistryEventMonitor:
         self.network_config = NETWORK_CONFIGS.get(self.network, NETWORK_CONFIGS['mainnet'])
         
         self.web3 = Web3(Web3.HTTPProvider(rpc_url))
-        
-        # Add PoA middleware if needed (for testnets)
-        if self.network_config['requires_poa']:
-            self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
         
         if not self.web3.is_connected():
             raise ConnectionError("Failed to connect to Ethereum node")
