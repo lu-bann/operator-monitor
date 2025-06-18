@@ -38,17 +38,17 @@ NETWORK_CONFIGS = {
         'default_rpc': 'https://ethereum-holesky.publicnode.com',
         'block_explorer': 'https://holesky.etherscan.io'
     },
-    'goerli': {
-        'name': 'Goerli Testnet',
+    'hoodi': {
+        'name': 'Hoodi Testnet',
         'chain_id': 5,
-        'default_rpc': 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-        'block_explorer': 'https://goerli.etherscan.io'
+        'default_rpc': 'https://ethereum-hoodi-rpc.publicnode.com',
+        'block_explorer': 'https://hoodi.etherscan.io'
     },
-    'sepolia': {
-        'name': 'Sepolia Testnet',
-        'chain_id': 11155111,
-        'default_rpc': 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-        'block_explorer': 'https://sepolia.etherscan.io'
+    'devnet': {
+        'name': 'Local Devnet',
+        'chain_id': 1337,
+        'default_rpc': 'http://localhost:8545',
+        'block_explorer': 'https://localhost:8545'
     }
 }
 
