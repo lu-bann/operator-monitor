@@ -3,10 +3,11 @@
 import asyncio
 import logging
 import sys
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
-from ..config import settings, NETWORK_CONFIGS
-from ..core import Web3Client, RegistryContract, EventProcessor
+from ..config import settings, NETWORK_CONFIGS, REGISTRY_CONTRACT_ABI
+from ..core import Web3Client, ContractInterface, EventProcessor
+from ..core.contract_interface import RegistryContract
 from ..notifications import ConsoleNotifier, SlackNotifier, NotificationManager
 from ..data import EventFetcher, InMemoryEventStore, NullEventStore
 from ..monitor import EventMonitor, ReconnectionHandler
@@ -20,6 +21,45 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class ContractRegistry:
+    """Registry for managing multiple contract types"""
+    
+    def __init__(self):
+        self.contract_types = {}
+        self.contract_configs = {}
+    
+    def register_contract_type(self, name: str, contract_class: type, abi: List[Dict]):
+        """Register a new contract type"""
+        self.contract_types[name] = {
+            'class': contract_class,
+            'abi': abi
+        }
+    
+    def add_contract_config(self, name: str, contract_type: str, address: str):
+        """Add a contract configuration"""
+        if contract_type not in self.contract_types:
+            raise ValueError(f"Unknown contract type: {contract_type}")
+        
+        self.contract_configs[name] = {
+            'type': contract_type,
+            'address': address
+        }
+    
+    def create_contracts(self, web3_client: Web3Client) -> List[ContractInterface]:
+        """Create all configured contract instances"""
+        contracts = []
+        
+        for name, config in self.contract_configs.items():
+            contract_type_info = self.contract_types[config['type']]
+            contract_class = contract_type_info['class']
+            
+            # Create contract instance
+            contract = contract_class(web3_client, config['address'])
+            contracts.append(contract)
+        
+        return contracts
+
+
 class RegistryMonitorCLI:
     """Main CLI application"""
     
@@ -27,11 +67,31 @@ class RegistryMonitorCLI:
         """Initialize CLI application"""
         self.settings = settings
         self.web3_client: Optional[Web3Client] = None
-        self.registry_contract: Optional[RegistryContract] = None
+        self.contracts: List[ContractInterface] = []
         self.event_processor: Optional[EventProcessor] = None
         self.notification_manager: Optional[NotificationManager] = None
         self.event_monitor: Optional[EventMonitor] = None
+        self.contract_registry = ContractRegistry()
         
+        # Register default contract types
+        self._register_default_contracts()
+    
+    def _register_default_contracts(self):
+        """Register default contract types"""
+        # Register Registry contract
+        self.contract_registry.register_contract_type(
+            'registry', 
+            RegistryContract, 
+            REGISTRY_CONTRACT_ABI
+        )
+        
+        # Add default Registry contract configuration
+        self.contract_registry.add_contract_config(
+            'main_registry',
+            'registry', 
+            self.settings.contract_address
+        )
+    
     def _initialize_components(self):
         """Initialize all application components"""
         try:
@@ -47,11 +107,8 @@ class RegistryMonitorCLI:
             # Initialize Web3 client
             self.web3_client = Web3Client(rpc_url, self.settings.network)
             
-            # Initialize contract interface
-            self.registry_contract = RegistryContract(
-                self.web3_client, 
-                self.settings.contract_address
-            )
+            # Initialize contracts
+            self.contracts = self.contract_registry.create_contracts(self.web3_client)
             
             # Initialize event processor
             self.event_processor = EventProcessor(network_config)
@@ -77,7 +134,7 @@ class RegistryMonitorCLI:
             # Initialize event monitor
             self.event_monitor = EventMonitor(
                 self.web3_client,
-                self.registry_contract,
+                self.contracts,
                 self.event_processor,
                 self.notification_manager,
                 event_store
@@ -94,12 +151,16 @@ class RegistryMonitorCLI:
         network_config = NETWORK_CONFIGS[self.settings.network]
         rpc_url = self.settings.rpc_url or network_config['default_rpc']
         
-        print("🔍 Registry Event Monitor")
+        print("🔍 Multi-Contract Event Monitor")
         print("="*50)
         print(f"🌐 Network: {network_config['name']} (Chain ID: {network_config['chain_id']})")
         print(f"🔗 RPC URL: {rpc_url}")
-        print(f"📄 Contract: {self.settings.contract_address}")
         print(f"🔍 Block Explorer: {network_config['block_explorer']}")
+        
+        # Show contracts
+        print(f"📄 Monitoring {len(self.contracts)} contracts:")
+        for contract in self.contracts:
+            print(f"   • {contract.contract_name}: {contract.contract_address}")
         
         # Show notification channels
         active_notifiers = self.notification_manager.get_active_notifiers()
@@ -131,7 +192,7 @@ class RegistryMonitorCLI:
             if self.settings.show_history:
                 history_command = HistoryCommand(
                     self.web3_client,
-                    self.registry_contract,
+                    self.contracts,
                     self.event_processor,
                     self.notification_manager,
                     self.settings.chunk_size
@@ -185,7 +246,7 @@ class RegistryMonitorCLI:
             
             history_command = HistoryCommand(
                 self.web3_client,
-                self.registry_contract,
+                self.contracts,
                 self.event_processor,
                 self.notification_manager,
                 self.settings.chunk_size

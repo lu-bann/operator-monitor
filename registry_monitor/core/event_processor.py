@@ -28,20 +28,24 @@ class EventProcessor:
         }
     
     def format_event(self, event: Dict[str, Any]) -> str:
-        """Format an event for console display"""
+        """Format an event for display"""
         event_name = event['event']
         args = event['args']
         block_number = event['blockNumber']
         tx_hash = event['transactionHash'].hex()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        # Get the correct block explorer URL for the network
+        block_explorer = self.network_config['block_explorer']
+        
         formatted = f"\n{'='*80}\n"
         formatted += f"🔥 EVENT DETECTED: {event_name}\n"
         formatted += f"⏰ Timestamp: {timestamp}\n"
         formatted += f"📦 Block: {block_number}\n"
         formatted += f"🔗 Transaction: {tx_hash}\n"
+        formatted += f"🌐 Block Explorer: {block_explorer}/tx/{tx_hash}\n"
         formatted += f"📄 Contract: {event['address']}\n"
-        formatted += f"{'='*80}\n"
+        formatted += f"=={'*'*76}==\n"
         
         # Format event-specific data
         if event_name == "OperatorRegistered":

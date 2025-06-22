@@ -2,8 +2,8 @@
 
 import asyncio
 import logging
-from typing import Optional, Dict, Any
-from ..core import Web3Client, RegistryContract, EventProcessor
+from typing import Optional, Dict, Any, List, Union
+from ..core import Web3Client, ContractInterface, EventProcessor
 from ..notifications import NotificationManager
 from ..data import EventFetcher
 
@@ -31,16 +31,18 @@ class MonitorCommand:
 class HistoryCommand:
     """Historical events command"""
     
-    def __init__(self, web3_client: Web3Client, registry_contract: RegistryContract,
+    def __init__(self, web3_client: Web3Client, contracts: Union[ContractInterface, List[ContractInterface]],
                  event_processor: EventProcessor, notification_manager: NotificationManager,
                  chunk_size: int = 50000):
         """Initialize history command"""
-        self.event_fetcher = EventFetcher(web3_client, registry_contract, chunk_size)
+        self.event_fetcher = EventFetcher(web3_client, contracts, chunk_size)
         self.event_processor = event_processor
         self.notification_manager = notification_manager
+        # Ensure contracts is always a list
+        self.contracts = contracts if isinstance(contracts, list) else [contracts]
     
     async def fetch_and_display_history(self, from_block: Optional[int] = None, 
-                                      max_events: int = 50):
+                                      max_events: int = 50, contract_filter: str = None):
         """Fetch and display historical events"""
         try:
             # Calculate from_block if not provided
@@ -48,12 +50,16 @@ class HistoryCommand:
                 current_block = self.event_fetcher.web3_client.get_current_block()
                 from_block = max(0, current_block - 1000)
             
+            contract_names = [c.contract_name for c in self.contracts]
+            filter_text = f" (filtering by {contract_filter})" if contract_filter else ""
             print(f"📚 Fetching historical events from block {from_block}")
+            print(f"📄 Monitoring contracts: {', '.join(contract_names)}{filter_text}")
             
             # Fetch events
             events = await self.event_fetcher.get_historical_events_async(
                 from_block=from_block,
-                max_events=max_events
+                max_events=max_events,
+                contract_filter=contract_filter
             )
             
             if events:
@@ -64,6 +70,13 @@ class HistoryCommand:
                     # Format and display each event
                     console_message = self.event_processor.format_event(event)
                     print(console_message)
+                    
+                    # Send notifications for historical events
+                    try:
+                        self.notification_manager.send_notification(console_message, event)
+                        logger.debug(f"Notification sent for historical event: {event['event']}")
+                    except Exception as e:
+                        logger.warning(f"Failed to send notification for historical event {event['event']}: {e}")
             else:
                 print("\n📚 No historical events found")
                 

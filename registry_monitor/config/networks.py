@@ -15,7 +15,7 @@ NETWORK_CONFIGS = {
     },
     'hoodi': {
         'name': 'Hoodi Testnet',
-        'chain_id': 5,
+        'chain_id': 560048,
         'default_rpc': 'https://ethereum-hoodi-rpc.publicnode.com',
         'block_explorer': 'https://hoodi.etherscan.io'
     },
