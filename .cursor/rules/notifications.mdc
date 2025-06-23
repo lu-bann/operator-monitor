@@ -1,0 +1,156 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Notification System Rules
+
+## Notification Manager Pattern (Required Architecture)
+
+### 1. Multi-Channel Setup
+```python
+# In RegistryMonitorCLI._initialize_components()
+notification_manager = NotificationManager()
+
+# Console notifier as fallback (REQUIRED)
+console_notifier = ConsoleNotifier(verbose=True)
+notification_manager.add_notifier(console_notifier, is_fallback=True)
+
+# Optional primary notifiers
+if self.settings.slack_bot_token:
+    slack_notifier = SlackNotifier(token, channel)
+    notification_manager.add_notifier(slack_notifier)  # Primary
+```
+
+### 2. Fallback Mechanism (CRITICAL)
+- **MUST have** ConsoleNotifier as fallback (`is_fallback=True`)
+- **MUST try** primary notifiers first
+- **MUST fallback** to console if all primary notifiers fail
+- **MUST log** fallback usage with `logger.warning()`
+
+### 3. Notification Flow Pattern
+```python
+# In NotificationManager.send_notification()
+success_count = 0
+
+# Try primary notifiers first
+for notifier in self.notifiers:
+    if notifier.send(message, event):
+        success_count += 1
+
+# Fallback if all primary failed
+if success_count == 0 and self.fallback_notifiers:
+    for notifier in self.fallback_notifiers:
+        if notifier.send(message, event):
+            success_count += 1
+            break  # Only need one fallback to succeed
+```
+
+## Notifier Interface Requirements
+
+### Base Interface (NotifierInterface)
+```python
+# MUST implement these methods
+def send(self, message: str, event: Dict[str, Any] = None) -> bool
+def test_connection(self) -> bool  
+def get_name(self) -> str
+```
+
+### Error Handling Pattern
+```python
+# In NotificationManager - MUST handle notifier exceptions
+try:
+    if notifier.send(message, event):
+        success_count += 1
+except Exception as e:
+    logger.error(f"Error with notifier {notifier.get_name()}: {e}")
+```
+
+## Console Notifier (Always Required)
+
+### Implementation Requirements
+- **MUST be** always available (no external dependencies)
+- **MUST support** verbose mode for detailed output
+- **MUST format** messages with colors and emojis
+- **MUST handle** all event types gracefully
+
+### Usage Pattern
+```python
+console_notifier = ConsoleNotifier(verbose=True)
+notification_manager.add_notifier(console_notifier, is_fallback=True)
+```
+
+## Slack Notifier (Optional Primary)
+
+### Configuration Requirements
+- **MUST require** `SLACK_BOT_TOKEN` environment variable
+- **MUST require** `SLACK_CHANNEL` environment variable
+- **MUST validate** token format and channel accessibility
+- **MUST implement** proper error handling for API failures
+
+### Connection Testing
+```python
+# MUST implement in SlackNotifier.test_connection()
+def test_connection(self) -> bool:
+    try:
+        # Test channel access and bot permissions
+        response = self.client.conversations_info(channel=self.channel_id)
+        return response["ok"]
+    except Exception as e:
+        logger.error(f"Slack connection test failed: {e}")
+        return False
+```
+
+## Testing Framework
+
+### Connection Testing Pattern
+```python
+# In TestCommand._test_notifications()
+test_results = self.notification_manager.test_all_connections()
+
+for notifier, success in test_results.items():
+    status = "✅" if success else "❌"  
+    print(f"{status} {notifier}")
+```
+
+### Startup Testing (Required)
+```python
+# In RegistryMonitorCLI.run_monitor_command()
+print("\n🧪 Testing connections...")
+test_results = self.notification_manager.test_all_connections()
+
+for notifier, success in test_results.items():
+    status = "✅" if success else "❌"
+    print(f"{status} {notifier}")
+```
+
+## Message Formatting Standards
+
+### Console Messages
+- **MUST use** emojis for visual clarity
+- **MUST include** timestamp, block number, transaction hash
+- **MUST use** colors via rich formatting
+- **MUST be** human readable
+
+### Slack Messages  
+- **MUST use** Slack markdown formatting
+- **MUST include** clickable links to block explorers
+- **MUST handle** special characters properly
+- **MUST be** concise but informative
+
+## Error Resilience Requirements
+
+### Notification Failures
+- **MUST NOT** stop monitoring on notification failures
+- **MUST log** failed notifications without throwing exceptions
+- **MUST continue** with remaining notifiers if one fails
+- **MUST provide** meaningful error messages
+
+### Network Issues
+- **MUST handle** network timeouts gracefully
+- **MUST implement** retry logic for transient failures
+- **MUST fallback** to console on persistent failures
+
+@registry_monitor/notifications/notification_manager.py
+@registry_monitor/notifications/console_notifier.py
+@registry_monitor/notifications/slack_notifier.py

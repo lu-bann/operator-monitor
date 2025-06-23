@@ -1,0 +1,97 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Event Processing Rules
+
+## Event Processing Pipeline (Required Pattern)
+
+### 1. Event Validation
+```python
+# In EventMonitor.handle_event() - MUST validate before processing
+if not self.event_processor.validate_event(event):
+    logger.warning("Invalid event received, skipping")
+    return
+```
+
+### 2. Event Storage Pattern
+```python
+# Store event if persistence is enabled
+if self.event_store:
+    self.event_store.store_event(event)
+```
+
+### 3. Multi-Format Message Generation
+```python
+# Format for console display
+console_message = self.event_processor.format_event(event)
+
+# Format for Slack (if needed)  
+slack_message = self.event_processor.format_slack_message(event)
+```
+
+### 4. Contract Event Identification
+```python
+# MUST identify source contract for multi-contract support
+event_contract = self._identify_contract_for_event(event)
+if event_contract:
+    event['contract_name'] = event_contract.contract_name
+    event['contract_address'] = event_contract.contract_address
+```
+
+## Event Formatting Requirements
+
+### Console Format (EventProcessor.format_event)
+- **MUST include** event name, timestamp, block number, transaction hash
+- **MUST include** network-specific block explorer link
+- **MUST use** emojis and colors for readability
+- **MUST format** as: `🔥 EVENT DETECTED: {event_name}`
+
+### Slack Format (EventProcessor.format_slack_message)  
+- **MUST be** Slack-compatible markdown
+- **MUST include** clickable transaction links
+- **MUST handle** special characters and formatting
+
+## Event Filter Management
+
+### Filter Creation Pattern
+```python
+# In ContractInterface.create_event_filters()
+event_filters = []
+for event_type in event_types:
+    if hasattr(self.contract.events, event_type):
+        event_filter = getattr(self.contract.events, event_type).create_filter(
+            fromBlock=from_block
+        )
+        event_filters.append(event_filter)
+```
+
+### Concurrent Filter Processing
+```python
+# In EventMonitor.listen_for_events() - MUST process concurrently
+tasks = []
+for event_filter in all_event_filters:
+    tasks.append(self._process_filter(event_filter))
+
+results = await asyncio.gather(*tasks, return_exceptions=True)
+```
+
+## Error Handling in Event Processing
+
+### Graceful Event Processing
+- **MUST continue** monitoring if individual events fail
+- **MUST log** processing errors without stopping monitor
+- **MUST validate** event structure before processing
+- **MUST handle** missing contract identification gracefully
+
+### Retry Pattern for Failed Events
+```python
+# Log exceptions but don't stop processing
+for i, result in enumerate(results):
+    if isinstance(result, Exception):
+        logger.error(f"Error processing filter {i}: {result}")
+```
+
+@registry_monitor/core/event_processor.py
+@registry_monitor/monitor/event_monitor.py

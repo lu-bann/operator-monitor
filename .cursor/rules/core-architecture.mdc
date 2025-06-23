@@ -1,0 +1,104 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Registry Event Monitor - Core Architecture Rules
+
+## Critical Architecture - DO NOT MODIFY WITHOUT EXPLICIT REQUEST
+
+### 1. Modular Design Pattern
+- **MUST maintain** module separation: `core`, `config`, `notifications`, `data`, `monitor`, `cli`
+- **MUST preserve** clean import boundaries between modules
+- **MUST keep** abstract base classes: `ContractInterface`, `NotifierInterface`, `EventStoreInterface`
+
+### 2. Multi-Contract Support
+- **ContractRegistry** manages multiple contract types via:
+  - `register_contract_type(name, class, abi)` - Register new contract types
+  - `add_contract_config(name, type, address)` - Add contract instances  
+  - `create_contracts(web3_client)` - Instantiate configured contracts
+- **MUST maintain** ability to monitor multiple contracts simultaneously
+- **MUST preserve** contract-agnostic event processing in `EventMonitor`
+
+### 3. Async-First Architecture
+- **MUST maintain** all core operations as async (monitoring, fetching, processing)
+- **MUST preserve** concurrent event processing using `asyncio.gather()`
+- **MUST keep** non-blocking event polling with configurable intervals
+
+### 4. Event Processing Pipeline
+```python
+# Required flow in EventMonitor.handle_event()
+1. Validate event with event_processor.validate_event()
+2. Store event if event_store exists
+3. Format for console with event_processor.format_event()
+4. Send notifications via notification_manager.send_notification()
+```
+
+### 5. Notification System with Fallbacks
+- **NotificationManager** orchestrates multiple channels
+- **ConsoleNotifier** as always-available fallback (is_fallback=True)
+- **SlackNotifier** as optional primary channel
+- **MUST preserve** fallback mechanism when primary notifiers fail
+
+## Environment Configuration (DO NOT CHANGE)
+
+Required environment variables:
+- `NETWORK` - Target blockchain network
+- `CONTRACT_ADDRESS` - Registry contract address  
+- `RPC_URL` - Custom RPC endpoint (optional)
+- `SLACK_BOT_TOKEN`, `SLACK_CHANNEL` - Slack integration
+- `SHOW_HISTORY`, `FROM_BLOCK` - Historical data control
+- `USE_RECONNECTION` - Auto-reconnection toggle
+- `CHUNK_SIZE` - Block chunk size for historical fetching
+
+## Registry Contract Events (Complete Set Required)
+
+```python
+REQUIRED_EVENTS = [
+    'OperatorRegistered',    # New operator registration
+    'OperatorSlashed',       # Operator slashing events  
+    'OperatorUnregistered',  # Operator removal
+    'CollateralClaimed',     # Collateral claim events
+    'CollateralAdded',       # Collateral addition events
+    'OperatorOptedIn',       # Operator opt-in to slashing
+    'OperatorOptedOut'       # Operator opt-out from slashing
+]
+```
+
+## Network Support (Fixed Configuration)
+
+Supported networks with chain IDs:
+- Mainnet (1), Holesky (17000), Hoodi (560048), Devnet (1337)
+- **MUST preserve** network-specific RPC endpoints and block explorers
+- **MUST keep** automatic chain ID verification in Web3Client
+
+## Component Initialization Order (Required Sequence)
+
+```python
+# In RegistryMonitorCLI._initialize_components()
+1. settings.validate()
+2. network_config = NETWORK_CONFIGS[settings.network]  
+3. web3_client = Web3Client(rpc_url, settings.network)
+4. contracts = contract_registry.create_contracts(web3_client)
+5. event_processor = EventProcessor(network_config)
+6. notification_manager = NotificationManager()
+7. event_store = InMemoryEventStore(max_events=1000)
+8. event_monitor = EventMonitor(web3_client, contracts, ...)
+```
+
+## Extension Guidelines
+
+When adding new features:
+1. **Follow async patterns** - use `async def` for I/O operations
+2. **Implement interfaces** - inherit from base classes for pluggability  
+3. **Use environment variables** - no hardcoded configuration
+4. **Add type hints** - maintain typing throughout
+5. **Handle errors gracefully** - log errors, continue operation when possible
+6. **Test connections** - implement `test_connection()` for new notifiers
+
+## Referenced Components
+
+@registry_monitor/cli/main.py
+@registry_monitor/core/contract_interface.py  
+@registry_monitor/monitor/event_monitor.py
+@registry_monitor/notifications/notification_manager.py
