@@ -256,4 +256,63 @@ TAIYI_CORE_ABI = [
         "name": "EthSponsored",
         "type": "event"
     }
+]
+
+# EigenLayerMiddleware ABI
+EIGENLAYER_MIDDLEWARE_ABI = [
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": False, "name": "rewardsHandler", "type": "address"}
+        ],
+        "name": "RewardsHandlerSet",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "oldInitiator", "type": "address"},
+            {"indexed": True, "name": "newInitiator", "type": "address"}
+        ],
+        "name": "RewardsInitiatorSet",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "registrationRoot", "type": "bytes32"}
+        ],
+        "name": "ValidatorsRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "registrationRoot", "type": "bytes32"}
+        ],
+        "name": "ValidatorsUnregistered",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "registrationRoot", "type": "bytes32"},
+            {"indexed": False, "name": "count", "type": "uint256"}
+        ],
+        "name": "DelegationsBatchSet",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "registrationRoot", "type": "bytes32"},
+            {"indexed": True, "name": "delegatee", "type": "address"}
+        ],
+        "name": "SlasherOptedIn",
+        "type": "event"
+    }
 ] 

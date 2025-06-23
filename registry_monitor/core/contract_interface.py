@@ -5,7 +5,7 @@ from web3 import Web3
 from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
 
-from ..config import REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI, TAIYI_CORE_ABI
+from ..config import REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI, TAIYI_CORE_ABI, EIGENLAYER_MIDDLEWARE_ABI
 from .web3_client import Web3Client
 
 logger = logging.getLogger(__name__)
@@ -194,4 +194,30 @@ class TaiyiCoreContract(ContractInterface):
         """Return TaiyiCore-specific event types"""
         return [
             'Exhausted', 'TipCollected', 'PreconfRequestExecuted', 'TipReceived', 'EthSponsored'
+        ]
+
+
+class EigenLayerMiddlewareContract(ContractInterface):
+    """Interface for interacting with the EigenLayerMiddleware contract"""
+    
+    def __init__(self, web3_client: Web3Client, contract_address: str):
+        """
+        Initialize EigenLayerMiddleware contract interface
+        
+        Args:
+            web3_client: Web3Client instance
+            contract_address: The deployed EigenLayerMiddleware contract address
+        """
+        super().__init__(
+            web3_client=web3_client,
+            contract_address=contract_address,
+            abi=EIGENLAYER_MIDDLEWARE_ABI,
+            contract_name="EigenLayerMiddleware"
+        )
+    
+    def get_event_types(self) -> List[str]:
+        """Return EigenLayerMiddleware-specific event types"""
+        return [
+            'RewardsHandlerSet', 'RewardsInitiatorSet', 'ValidatorsRegistered',
+            'ValidatorsUnregistered', 'DelegationsBatchSet', 'SlasherOptedIn'
         ] 

@@ -24,6 +24,9 @@ class Settings:
         # TaiyiCore contract address (optional)
         self.taiyi_core_contract_address = os.getenv('TAIYI_CORE_CONTRACT_ADDRESS')
         
+        # EigenLayer Middleware contract address (optional)
+        self.eigenlayer_middleware_contract_address = os.getenv('EIGENLAYER_MIDDLEWARE_CONTRACT_ADDRESS')
+        
         # Slack configuration
         self.slack_bot_token = os.getenv('SLACK_BOT_TOKEN')
         self.slack_channel = os.getenv('SLACK_CHANNEL', 'C091L7Q0ZJN')

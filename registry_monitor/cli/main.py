@@ -5,8 +5,8 @@ import logging
 import sys
 from typing import Optional, List, Dict, Any
 
-from ..config import settings, NETWORK_CONFIGS, REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI, TAIYI_CORE_ABI
-from ..core import Web3Client, ContractInterface, EventProcessor, TaiyiRegistryCoordinatorContract, TaiyiEscrowContract, TaiyiCoreContract
+from ..config import settings, NETWORK_CONFIGS, REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI, TAIYI_CORE_ABI, EIGENLAYER_MIDDLEWARE_ABI
+from ..core import Web3Client, ContractInterface, EventProcessor, TaiyiRegistryCoordinatorContract, TaiyiEscrowContract, TaiyiCoreContract, EigenLayerMiddlewareContract
 from ..core.contract_interface import RegistryContract
 from ..notifications import ConsoleNotifier, SlackNotifier, NotificationManager
 from ..data import EventFetcher, InMemoryEventStore, NullEventStore
@@ -106,6 +106,13 @@ class RegistryMonitorCLI:
             TAIYI_CORE_ABI
         )
         
+        # Register EigenLayerMiddleware contract
+        self.contract_registry.register_contract_type(
+            'eigenlayer_middleware',
+            EigenLayerMiddlewareContract,
+            EIGENLAYER_MIDDLEWARE_ABI
+        )
+        
         # Add default Registry contract configuration
         self.contract_registry.add_contract_config(
             'main_registry',
@@ -139,6 +146,15 @@ class RegistryMonitorCLI:
                 self.settings.taiyi_core_contract_address
             )
             logger.info(f"Added TaiyiCore from environment: {self.settings.taiyi_core_contract_address}")
+        
+        # Add EigenLayerMiddleware contract if configured
+        if self.settings.eigenlayer_middleware_contract_address:
+            self.contract_registry.add_contract_config(
+                'eigenlayer_middleware',
+                'eigenlayer_middleware',
+                self.settings.eigenlayer_middleware_contract_address
+            )
+            logger.info(f"Added EigenLayerMiddleware from environment: {self.settings.eigenlayer_middleware_contract_address}")
     
     def add_taiyi_contract(self, contract_address: str, name: str = "taiyi_coordinator"):
         """Add a TaiyiRegistryCoordinator contract to monitor"""
