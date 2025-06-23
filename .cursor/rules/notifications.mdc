@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Notification System Rules
 
@@ -154,3 +154,4 @@ for notifier, success in test_results.items():
 @registry_monitor/notifications/notification_manager.py
 @registry_monitor/notifications/console_notifier.py
 @registry_monitor/notifications/slack_notifier.py
+
