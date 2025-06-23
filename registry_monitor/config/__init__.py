@@ -2,6 +2,6 @@
 
 from .networks import NETWORK_CONFIGS
 from .settings import settings, Settings
-from .contract_abi import REGISTRY_CONTRACT_ABI
+from .contract_abi import REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI
 
-__all__ = ['NETWORK_CONFIGS', 'settings', 'Settings', 'REGISTRY_CONTRACT_ABI'] 
+__all__ = ['NETWORK_CONFIGS', 'settings', 'Settings', 'REGISTRY_CONTRACT_ABI', 'TAIYI_REGISTRY_COORDINATOR_ABI'] 

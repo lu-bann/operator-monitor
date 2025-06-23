@@ -531,7 +531,7 @@ def main():
     
     # Configuration - All via environment variables
     RPC_URL = os.getenv('RPC_URL', network_config['default_rpc'])
-    CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS')
+    REGISTRY_CONTRACT_ADDRESS = os.getenv('REGISTRY_CONTRACT_ADDRESS')
     
     # Slack configuration
     SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN', None)
@@ -547,12 +547,12 @@ def main():
     print("="*50)
     print(f"🌐 Network: {network_config['name']} (Chain ID: {network_config['chain_id']})")
     print(f"🔗 RPC URL: {RPC_URL}")
-    print(f"📄 Contract: {CONTRACT_ADDRESS}")
+    print(f"📄 Contract: {REGISTRY_CONTRACT_ADDRESS}")
     print(f"🔍 Block Explorer: {network_config['block_explorer']}")
     
-    if CONTRACT_ADDRESS == "0x0000000000000000000000000000000000000000":
-        print("❌ ERROR: Please set the CONTRACT_ADDRESS environment variable")
-        print("Example: export CONTRACT_ADDRESS='0x1234567890123456789012345678901234567890'")
+    if REGISTRY_CONTRACT_ADDRESS == "0x0000000000000000000000000000000000000000":
+        print("❌ ERROR: Please set the REGISTRY_CONTRACT_ADDRESS environment variable")
+        print("Example: export REGISTRY_CONTRACT_ADDRESS='0x1234567890123456789012345678901234567890'")
         return
     
     # Check Slack configuration
@@ -574,7 +574,7 @@ def main():
         # Initialize the monitor with network and Slack support
         monitor = RegistryEventMonitor(
             RPC_URL, 
-            CONTRACT_ADDRESS,
+            REGISTRY_CONTRACT_ADDRESS,
             network=NETWORK,
             slack_token=SLACK_BOT_TOKEN,
             slack_channel=SLACK_CHANNEL,

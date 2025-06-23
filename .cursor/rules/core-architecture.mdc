@@ -44,7 +44,7 @@ alwaysApply: true
 
 Required environment variables:
 - `NETWORK` - Target blockchain network
-- `CONTRACT_ADDRESS` - Registry contract address  
+- `REGISTRY_CONTRACT_ADDRESS` - Registry contract address  
 - `RPC_URL` - Custom RPC endpoint (optional)
 - `SLACK_BOT_TOKEN`, `SLACK_CHANNEL` - Slack integration
 - `SHOW_HISTORY`, `FROM_BLOCK` - Historical data control

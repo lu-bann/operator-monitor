@@ -13,7 +13,10 @@ class Settings:
     def __init__(self):
         self.network = os.getenv('NETWORK', 'mainnet').lower()
         self.rpc_url = os.getenv('RPC_URL')
-        self.contract_address = os.getenv('CONTRACT_ADDRESS')
+        self.registry_contract_address = os.getenv('REGISTRY_CONTRACT_ADDRESS')
+        
+        # TaiyiRegistryCoordinator contract address (optional)
+        self.taiyi_contract_address = os.getenv('TAIYI_CONTRACT_ADDRESS')
         
         # Slack configuration
         self.slack_bot_token = os.getenv('SLACK_BOT_TOKEN')
@@ -27,8 +30,8 @@ class Settings:
         
     def validate(self):
         """Validate required settings"""
-        if not self.contract_address or self.contract_address == "0x0000000000000000000000000000000000000000":
-            raise ValueError("CONTRACT_ADDRESS environment variable is required")
+        if not self.registry_contract_address or self.registry_contract_address == "0x0000000000000000000000000000000000000000":
+            raise ValueError("REGISTRY_CONTRACT_ADDRESS environment variable is required")
         
         from .networks import NETWORK_CONFIGS
         if self.network not in NETWORK_CONFIGS:

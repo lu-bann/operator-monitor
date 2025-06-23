@@ -26,6 +26,20 @@ class EventProcessor:
             1: "Equivocation", 
             2: "Commitment"
         }
+        
+        # OperatorStatus enum mapping
+        self.operator_statuses = {
+            0: "NEVER_REGISTERED",
+            1: "REGISTERED", 
+            2: "DEREGISTERED"
+        }
+        
+        # RestakingProtocol enum mapping
+        self.restaking_protocols = {
+            0: "NONE",
+            1: "EIGENLAYER",
+            2: "SYMBIOTIC"
+        }
     
     def format_event(self, event: Dict[str, Any]) -> str:
         """Format an event for display"""
@@ -34,6 +48,7 @@ class EventProcessor:
         block_number = event['blockNumber']
         tx_hash = event['transactionHash'].hex()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        contract_name = event.get('contract_name', 'Unknown')
         
         # Get the correct block explorer URL for the network
         block_explorer = self.network_config['block_explorer']
@@ -44,10 +59,26 @@ class EventProcessor:
         formatted += f"📦 Block: {block_number}\n"
         formatted += f"🔗 Transaction: {tx_hash}\n"
         formatted += f"🌐 Block Explorer: {block_explorer}/tx/{tx_hash}\n"
-        formatted += f"📄 Contract: {event['address']}\n"
-        formatted += f"=={'*'*76}==\n"
+        formatted += f"📄 Contract: {contract_name} ({event['address']})\n"
+        formatted += f"=={'='*76}==\n"
         
-        # Format event-specific data
+        # Format original Registry contract events
+        if contract_name == "Registry":
+            formatted += self._format_registry_event(event_name, args)
+        # Format TaiyiRegistryCoordinator events
+        elif contract_name == "TaiyiRegistryCoordinator":
+            formatted += self._format_taiyi_event(event_name, args)
+        else:
+            # Generic formatting for unknown contract events
+            formatted += self._format_generic_event(args)
+        
+        formatted += f"{'='*80}\n"
+        return formatted
+    
+    def _format_registry_event(self, event_name: str, args: Dict[str, Any]) -> str:
+        """Format Registry contract events"""
+        formatted = ""
+        
         if event_name == "OperatorRegistered":
             formatted += f"📝 Registration Root: {args['registrationRoot'].hex()}\n"
             formatted += f"💰 Collateral: {Web3.from_wei(args['collateralWei'], 'ether')} ETH\n"
@@ -71,7 +102,7 @@ class EventProcessor:
             
         elif event_name == "CollateralAdded":
             formatted += f"📝 Registration Root: {args['registrationRoot'].hex()}\n"
-            formatted += f"💰 Added Amount: {Web3.from_wei(args['collateralWei'], 'ether')} ETH\n"
+            formatted += f"�� Added Amount: {Web3.from_wei(args['collateralWei'], 'ether')} ETH\n"
             
         elif event_name == "OperatorOptedIn":
             formatted += f"📝 Registration Root: {args['registrationRoot'].hex()}\n"
@@ -81,8 +112,66 @@ class EventProcessor:
         elif event_name == "OperatorOptedOut":
             formatted += f"📝 Registration Root: {args['registrationRoot'].hex()}\n"
             formatted += f"⚔️  Slasher: {args['slasher']}\n"
+            
+        return formatted
+    
+    def _format_taiyi_event(self, event_name: str, args: Dict[str, Any]) -> str:
+        """Format TaiyiRegistryCoordinator contract events"""
+        formatted = ""
         
-        formatted += f"{'='*80}\n"
+        if event_name == "OperatorRegistered":
+            formatted += f"👤 Operator: {args['operator']}\n"
+            formatted += f"🆔 Operator ID: {args['operatorId'].hex()}\n"
+            formatted += f"📋 Linglong Subset IDs: {list(args['linglongSubsetIds'])}\n"
+            
+        elif event_name == "OperatorDeregistered":
+            formatted += f"👤 Operator: {args['operator']}\n"
+            formatted += f"🆔 Operator ID: {args['operatorId'].hex()}\n"
+            formatted += f"📋 Linglong Subset IDs: {list(args['linglongSubsetIds'])}\n"
+            
+        elif event_name == "OperatorStatusChanged":
+            prev_status = self.operator_statuses.get(args['previousStatus'], f"Unknown({args['previousStatus']})")
+            new_status = self.operator_statuses.get(args['newStatus'], f"Unknown({args['newStatus']})")
+            formatted += f"👤 Operator: {args['operator']}\n"
+            formatted += f"📊 Previous Status: {prev_status}\n"
+            formatted += f"📊 New Status: {new_status}\n"
+            
+        elif event_name == "LinglongSubsetCreated":
+            formatted += f"🆔 Linglong Subset ID: {args['linglongSubsetId']}\n"
+            formatted += f"💰 Minimum Stake: {Web3.from_wei(args['minStake'], 'ether')} ETH\n"
+            
+        elif event_name == "OperatorAddedToSubset":
+            formatted += f"👤 Operator: {args['operator']}\n"
+            formatted += f"🆔 Linglong Subset ID: {args['linglongSubsetId']}\n"
+            
+        elif event_name == "OperatorRemovedFromSubset":
+            formatted += f"👤 Operator: {args['operator']}\n"
+            formatted += f"🆔 Linglong Subset ID: {args['linglongSubsetId']}\n"
+            
+        elif event_name == "SocketRegistryUpdated":
+            formatted += f"🔄 Old Registry: {args['oldRegistry']}\n"
+            formatted += f"🔄 New Registry: {args['newRegistry']}\n"
+            
+        elif event_name == "PubkeyRegistryUpdated":
+            formatted += f"🔄 Old Registry: {args['oldRegistry']}\n"
+            formatted += f"🔄 New Registry: {args['newRegistry']}\n"
+            
+        elif event_name == "OperatorSocketUpdate":
+            formatted += f"🆔 Operator ID: {args['operatorId'].hex()}\n"
+            formatted += f"🔌 Socket: {args['socket']}\n"
+            
+        elif event_name == "RestakingMiddlewareUpdated":
+            protocol = self.restaking_protocols.get(args['restakingProtocol'], f"Unknown({args['restakingProtocol']})")
+            formatted += f"🔗 Restaking Protocol: {protocol}\n"
+            formatted += f"🔄 New Middleware: {args['newMiddleware']}\n"
+            
+        return formatted
+    
+    def _format_generic_event(self, args: Dict[str, Any]) -> str:
+        """Format generic events for unknown contracts"""
+        formatted = "📋 Event Arguments:\n"
+        for key, value in args.items():
+            formatted += f"   {key}: {value}\n"
         return formatted
     
     def format_slack_message(self, event: Dict[str, Any]) -> str:
@@ -92,16 +181,29 @@ class EventProcessor:
         block_number = event['blockNumber']
         tx_hash = event['transactionHash'].hex()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        contract_name = event.get('contract_name', 'Unknown')
         
         # Get the correct block explorer URL for the network
         block_explorer = self.network_config['block_explorer']
         
         # Create a more concise message for Slack
         message = f"🔥 *{event_name}* detected on {self.network_config['name']}!\n"
+        message += f"📄 Contract: {contract_name}\n"
         message += f"⏰ {timestamp} | 📦 Block {block_number}\n"
         message += f"🔗 <{block_explorer}/tx/{tx_hash}|View Transaction>\n"
         
         # Add event-specific details (abbreviated)
+        if contract_name == "Registry":
+            message += self._format_registry_slack(event_name, args)
+        elif contract_name == "TaiyiRegistryCoordinator":
+            message += self._format_taiyi_slack(event_name, args)
+        
+        return message
+    
+    def _format_registry_slack(self, event_name: str, args: Dict[str, Any]) -> str:
+        """Format Registry events for Slack"""
+        message = ""
+        
         if event_name == "OperatorRegistered":
             collateral_eth = Web3.from_wei(args['collateralWei'], 'ether')
             message += f"💰 Collateral: {collateral_eth} ETH\n"
@@ -132,7 +234,55 @@ class EventProcessor:
             
         elif event_name == "OperatorOptedOut":
             message += f"⚔️ Slasher: `{args['slasher']}`"
+            
+        return message
+    
+    def _format_taiyi_slack(self, event_name: str, args: Dict[str, Any]) -> str:
+        """Format TaiyiRegistryCoordinator events for Slack"""
+        message = ""
         
+        if event_name == "OperatorRegistered":
+            message += f"👤 Operator: `{args['operator']}`\n"
+            message += f"📋 Subsets: {list(args['linglongSubsetIds'])}"
+            
+        elif event_name == "OperatorDeregistered":
+            message += f"👤 Operator: `{args['operator']}`\n"
+            message += f"📋 Subsets: {list(args['linglongSubsetIds'])}"
+            
+        elif event_name == "OperatorStatusChanged":
+            prev_status = self.operator_statuses.get(args['previousStatus'], f"Unknown({args['previousStatus']})")
+            new_status = self.operator_statuses.get(args['newStatus'], f"Unknown({args['newStatus']})")
+            message += f"👤 Operator: `{args['operator']}`\n"
+            message += f"📊 Status: {prev_status} → {new_status}"
+            
+        elif event_name == "LinglongSubsetCreated":
+            min_stake_eth = Web3.from_wei(args['minStake'], 'ether')
+            message += f"🆔 Subset ID: {args['linglongSubsetId']}\n"
+            message += f"💰 Min Stake: {min_stake_eth} ETH"
+            
+        elif event_name == "OperatorAddedToSubset":
+            message += f"👤 Operator: `{args['operator']}`\n"
+            message += f"➕ Added to Subset: {args['linglongSubsetId']}"
+            
+        elif event_name == "OperatorRemovedFromSubset":
+            message += f"👤 Operator: `{args['operator']}`\n"
+            message += f"➖ Removed from Subset: {args['linglongSubsetId']}"
+            
+        elif event_name == "SocketRegistryUpdated":
+            message += f"🔄 Registry Updated: `{args['newRegistry']}`"
+            
+        elif event_name == "PubkeyRegistryUpdated":
+            message += f"🔄 Registry Updated: `{args['newRegistry']}`"
+            
+        elif event_name == "OperatorSocketUpdate":
+            message += f"🆔 Operator: `{args['operatorId'].hex()[:10]}...`\n"
+            message += f"🔌 Socket: {args['socket']}"
+            
+        elif event_name == "RestakingMiddlewareUpdated":
+            protocol = self.restaking_protocols.get(args['restakingProtocol'], f"Unknown({args['restakingProtocol']})")
+            message += f"🔗 Protocol: {protocol}\n"
+            message += f"🔄 Middleware: `{args['newMiddleware']}`"
+            
         return message
     
     def validate_event(self, event: Dict[str, Any]) -> bool:

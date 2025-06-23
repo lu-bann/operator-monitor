@@ -69,4 +69,101 @@ REGISTRY_CONTRACT_ABI = [
         "name": "OperatorOptedOut",
         "type": "event"
     }
+]
+
+# TaiyiRegistryCoordinator ABI
+TAIYI_REGISTRY_COORDINATOR_ABI = [
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "operatorId", "type": "bytes32"},
+            {"indexed": False, "name": "linglongSubsetIds", "type": "uint32[]"}
+        ],
+        "name": "OperatorRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "operatorId", "type": "bytes32"},
+            {"indexed": False, "name": "linglongSubsetIds", "type": "uint32[]"}
+        ],
+        "name": "OperatorDeregistered",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": False, "name": "previousStatus", "type": "uint8"},
+            {"indexed": False, "name": "newStatus", "type": "uint8"}
+        ],
+        "name": "OperatorStatusChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "linglongSubsetId", "type": "uint32"},
+            {"indexed": False, "name": "minStake", "type": "uint256"}
+        ],
+        "name": "LinglongSubsetCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "linglongSubsetId", "type": "uint32"}
+        ],
+        "name": "OperatorAddedToSubset",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": True, "name": "linglongSubsetId", "type": "uint32"}
+        ],
+        "name": "OperatorRemovedFromSubset",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "oldRegistry", "type": "address"},
+            {"indexed": True, "name": "newRegistry", "type": "address"}
+        ],
+        "name": "SocketRegistryUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "oldRegistry", "type": "address"},
+            {"indexed": True, "name": "newRegistry", "type": "address"}
+        ],
+        "name": "PubkeyRegistryUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operatorId", "type": "bytes32"},
+            {"indexed": False, "name": "socket", "type": "string"}
+        ],
+        "name": "OperatorSocketUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": False, "name": "restakingProtocol", "type": "uint8"},
+            {"indexed": False, "name": "newMiddleware", "type": "address"}
+        ],
+        "name": "RestakingMiddlewareUpdated",
+        "type": "event"
+    }
 ] 

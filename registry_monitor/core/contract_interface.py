@@ -5,7 +5,7 @@ from web3 import Web3
 from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
 
-from ..config import REGISTRY_CONTRACT_ABI
+from ..config import REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI
 from .web3_client import Web3Client
 
 logger = logging.getLogger(__name__)
@@ -116,4 +116,32 @@ class RegistryContract(ContractInterface):
         return [
             'OperatorRegistered', 'OperatorSlashed', 'OperatorUnregistered',
             'CollateralClaimed', 'CollateralAdded', 'OperatorOptedIn', 'OperatorOptedOut'
+        ]
+
+
+class TaiyiRegistryCoordinatorContract(ContractInterface):
+    """Interface for interacting with the TaiyiRegistryCoordinator contract"""
+    
+    def __init__(self, web3_client: Web3Client, contract_address: str):
+        """
+        Initialize TaiyiRegistryCoordinator contract interface
+        
+        Args:
+            web3_client: Web3Client instance
+            contract_address: The deployed TaiyiRegistryCoordinator contract address
+        """
+        super().__init__(
+            web3_client=web3_client,
+            contract_address=contract_address,
+            abi=TAIYI_REGISTRY_COORDINATOR_ABI,
+            contract_name="TaiyiRegistryCoordinator"
+        )
+    
+    def get_event_types(self) -> List[str]:
+        """Return TaiyiRegistryCoordinator-specific event types"""
+        return [
+            'OperatorRegistered', 'OperatorDeregistered', 'OperatorStatusChanged',
+            'LinglongSubsetCreated', 'OperatorAddedToSubset', 'OperatorRemovedFromSubset',
+            'SocketRegistryUpdated', 'PubkeyRegistryUpdated', 'OperatorSocketUpdate',
+            'RestakingMiddlewareUpdated'
         ] 
