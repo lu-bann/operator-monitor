@@ -5,8 +5,8 @@ import logging
 import sys
 from typing import Optional, List, Dict, Any
 
-from ..config import settings, NETWORK_CONFIGS, REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI
-from ..core import Web3Client, ContractInterface, EventProcessor, TaiyiRegistryCoordinatorContract, TaiyiEscrowContract
+from ..config import settings, NETWORK_CONFIGS, REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI, TAIYI_CORE_ABI
+from ..core import Web3Client, ContractInterface, EventProcessor, TaiyiRegistryCoordinatorContract, TaiyiEscrowContract, TaiyiCoreContract
 from ..core.contract_interface import RegistryContract
 from ..notifications import ConsoleNotifier, SlackNotifier, NotificationManager
 from ..data import EventFetcher, InMemoryEventStore, NullEventStore
@@ -99,6 +99,13 @@ class RegistryMonitorCLI:
             TAIYI_ESCROW_ABI
         )
         
+        # Register TaiyiCore contract
+        self.contract_registry.register_contract_type(
+            'taiyi_core',
+            TaiyiCoreContract,
+            TAIYI_CORE_ABI
+        )
+        
         # Add default Registry contract configuration
         self.contract_registry.add_contract_config(
             'main_registry',
@@ -123,6 +130,15 @@ class RegistryMonitorCLI:
                 self.settings.taiyi_escrow_contract_address
             )
             logger.info(f"Added TaiyiEscrow from environment: {self.settings.taiyi_escrow_contract_address}")
+        
+        # Add TaiyiCore contract if configured
+        if self.settings.taiyi_core_contract_address:
+            self.contract_registry.add_contract_config(
+                'taiyi_core',
+                'taiyi_core',
+                self.settings.taiyi_core_contract_address
+            )
+            logger.info(f"Added TaiyiCore from environment: {self.settings.taiyi_core_contract_address}")
     
     def add_taiyi_contract(self, contract_address: str, name: str = "taiyi_coordinator"):
         """Add a TaiyiRegistryCoordinator contract to monitor"""
@@ -141,6 +157,15 @@ class RegistryMonitorCLI:
             contract_address
         )
         logger.info(f"Added TaiyiEscrow contract: {contract_address}")
+    
+    def add_taiyi_core_contract(self, contract_address: str, name: str = "taiyi_core"):
+        """Add a TaiyiCore contract to monitor"""
+        self.contract_registry.add_contract_config(
+            name,
+            'taiyi_core',
+            contract_address
+        )
+        logger.info(f"Added TaiyiCore contract: {contract_address}")
     
     def _initialize_components(self):
         """Initialize all components for the monitor"""

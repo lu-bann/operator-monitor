@@ -207,4 +207,53 @@ TAIYI_ESCROW_ABI = [
         "name": "RequestedWithdraw",
         "type": "event"
     }
+]
+
+# TaiyiCore ABI
+TAIYI_CORE_ABI = [
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "preconfer", "type": "address"},
+            {"indexed": False, "name": "amount", "type": "uint256"}
+        ],
+        "name": "Exhausted",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": False, "name": "amount", "type": "uint256"},
+            {"indexed": False, "name": "preconfRequestHash", "type": "bytes32"}
+        ],
+        "name": "TipCollected",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "preconfRequestHash", "type": "bytes32"},
+            {"indexed": False, "name": "tipAmount", "type": "uint256"}
+        ],
+        "name": "PreconfRequestExecuted",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "preconfRequestHash", "type": "bytes32"},
+            {"indexed": False, "name": "amount", "type": "uint256"}
+        ],
+        "name": "TipReceived",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "recipient", "type": "address"},
+            {"indexed": False, "name": "amount", "type": "uint256"}
+        ],
+        "name": "EthSponsored",
+        "type": "event"
+    }
 ] 
