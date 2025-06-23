@@ -166,4 +166,45 @@ TAIYI_REGISTRY_COORDINATOR_ABI = [
         "name": "RestakingMiddlewareUpdated",
         "type": "event"
     }
+]
+
+# TaiyiEscrow ABI
+TAIYI_ESCROW_ABI = [
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "user", "type": "address"},
+            {"indexed": False, "name": "amount", "type": "uint256"}
+        ],
+        "name": "Deposited",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "user", "type": "address"},
+            {"indexed": False, "name": "amount", "type": "uint256"}
+        ],
+        "name": "Withdrawn",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "from", "type": "address"},
+            {"indexed": False, "name": "amount", "type": "uint256"},
+            {"indexed": False, "name": "isAfterExec", "type": "bool"}
+        ],
+        "name": "PaymentMade",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "user", "type": "address"},
+            {"indexed": False, "name": "amount", "type": "uint256"}
+        ],
+        "name": "RequestedWithdraw",
+        "type": "event"
+    }
 ] 

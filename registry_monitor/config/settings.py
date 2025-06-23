@@ -18,6 +18,9 @@ class Settings:
         # TaiyiRegistryCoordinator contract address (optional)
         self.taiyi_contract_address = os.getenv('TAIYI_CONTRACT_ADDRESS')
         
+        # TaiyiEscrow contract address (optional)
+        self.taiyi_escrow_contract_address = os.getenv('TAIYI_ESCROW_CONTRACT_ADDRESS')
+        
         # Slack configuration
         self.slack_bot_token = os.getenv('SLACK_BOT_TOKEN')
         self.slack_channel = os.getenv('SLACK_CHANNEL', 'C091L7Q0ZJN')

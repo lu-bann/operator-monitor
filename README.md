@@ -36,6 +36,13 @@ Advanced registry coordinator for EigenLayer and Symbiotic protocols with events
 - `OperatorSocketUpdate`
 - `RestakingMiddlewareUpdated`
 
+### 3. TaiyiEscrow Contract
+Escrow contract managing deposits, withdrawals and payments with events:
+- `Deposited` - User deposits Ether
+- `Withdrawn` - User withdraws Ether after lock period
+- `PaymentMade` - Payment processed (pre or post execution)
+- `RequestedWithdraw` - User requests withdrawal (starts lock period)
+
 ## Configuration
 
 Configure your environment variables:
@@ -46,6 +53,7 @@ Configure your environment variables:
 - `RPC_URL` - Custom RPC endpoint (optional)
 ### Optional Environment Variables  
 - `TAIYI_CONTRACT_ADDRESS` - TaiyiRegistryCoordinator contract address
+- `TAIYI_ESCROW_CONTRACT_ADDRESS` - TaiyiEscrow contract address
 - `SLACK_BOT_TOKEN` - Slack bot token for notifications
 - `SLACK_CHANNEL` - Slack channel ID for notifications
 - `SHOW_HISTORY` - Show historical events on startup (true/false)
@@ -60,6 +68,7 @@ Configure your environment variables:
 export NETWORK=holesky
 export REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
 export TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+export TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 export RPC_URL=https://holesky.infura.io/v3/YOUR_PROJECT_ID
 
 # Slack notifications (optional)
@@ -79,6 +88,7 @@ Create a `.env` file in the project root:
 NETWORK=holesky
 REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
 TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 RPC_URL=https://holesky.infura.io/v3/YOUR_PROJECT_ID
 SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
 SLACK_CHANNEL=C1234567890
@@ -93,6 +103,7 @@ FROM_BLOCK=12345
 export NETWORK=mainnet
 export REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
 export TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+export TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 export RPC_URL=https://eth.llamarpc.com
 
 python -m registry_monitor.cli.main monitor
@@ -108,6 +119,7 @@ python -m registry_monitor.cli.main monitor
 export NETWORK=mainnet
 export REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
 export TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+export TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 export SLACK_BOT_TOKEN=xoxb-your-bot-token
 export SLACK_CHANNEL=C091L7Q0ZJN
 export SHOW_HISTORY=true
@@ -127,61 +139,11 @@ async def main():
     # Add additional TaiyiRegistryCoordinator contracts
     cli.add_taiyi_contract("0x...", "secondary_taiyi")
     
+    # Add additional TaiyiEscrow contracts
+    cli.add_taiyi_escrow_contract("0x...", "secondary_escrow")
+    
     # Start monitoring
     await cli.run_monitor_command()
 
 asyncio.run(main())
 ```
-
-## Event Processing
-
-Events are processed through a standardized pipeline:
-
-1. **Validation** - Events are validated for required fields
-2. **Storage** - Events are stored in memory (configurable)
-3. **Formatting** - Events are formatted for different output channels
-4. **Notification** - Formatted events are sent through notification channels
-
-Each contract type has specialized formatting logic that displays relevant information in a user-friendly format with emojis and proper formatting.
-
-## Architecture
-
-The monitor uses a modular architecture:
-
-- **ContractRegistry** - Manages multiple contract types and configurations
-- **EventProcessor** - Handles event formatting and validation
-- **NotificationManager** - Manages multiple notification channels
-- **EventMonitor** - Core monitoring engine
-- **ReconnectionHandler** - Handles automatic reconnection
-
-## Networks Supported
-
-- **Mainnet** (Chain ID: 1)
-- **Holesky** (Chain ID: 17000) 
-- **Hoodi** (Chain ID: 560048)
-- **Devnet** (Chain ID: 1337)
-
-## Installation
-
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. Set up environment variables (see above)
-
-3. Run the monitor:
-```bash
-python -m registry_monitor.cli.main monitor
-```
-
-## Adding New Contract Types
-
-To add support for a new contract type:
-
-1. Create the contract ABI in `registry_monitor/config/contract_abi.py`
-2. Create a contract interface class inheriting from `ContractInterface`
-3. Add event formatting logic to `EventProcessor`
-4. Register the contract type in the CLI
-
-See `TaiyiRegistryCoordinatorContract` as an example implementation.

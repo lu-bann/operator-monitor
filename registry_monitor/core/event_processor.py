@@ -62,14 +62,15 @@ class EventProcessor:
         formatted += f"📄 Contract: {contract_name} ({event['address']})\n"
         formatted += f"=={'='*76}==\n"
         
-        # Format original Registry contract events
+        # Contract-specific formatting
         if contract_name == "Registry":
             formatted += self._format_registry_event(event_name, args)
-        # Format TaiyiRegistryCoordinator events
         elif contract_name == "TaiyiRegistryCoordinator":
-            formatted += self._format_taiyi_event(event_name, args)
+            formatted += self._format_taiyi_registry_coordinator_event(event_name, args)
+        elif contract_name == "TaiyiEscrow":
+            formatted += self._format_taiyi_escrow_event(event_name, args)
         else:
-            # Generic formatting for unknown contract events
+            # Generic formatting for unknown contract types
             formatted += self._format_generic_event(args)
         
         formatted += f"{'='*80}\n"
@@ -102,7 +103,7 @@ class EventProcessor:
             
         elif event_name == "CollateralAdded":
             formatted += f"📝 Registration Root: {args['registrationRoot'].hex()}\n"
-            formatted += f"�� Added Amount: {Web3.from_wei(args['collateralWei'], 'ether')} ETH\n"
+            formatted += f"💰 Added Amount: {Web3.from_wei(args['collateralWei'], 'ether')} ETH\n"
             
         elif event_name == "OperatorOptedIn":
             formatted += f"📝 Registration Root: {args['registrationRoot'].hex()}\n"
@@ -115,7 +116,7 @@ class EventProcessor:
             
         return formatted
     
-    def _format_taiyi_event(self, event_name: str, args: Dict[str, Any]) -> str:
+    def _format_taiyi_registry_coordinator_event(self, event_name: str, args: Dict[str, Any]) -> str:
         """Format TaiyiRegistryCoordinator contract events"""
         formatted = ""
         
@@ -165,6 +166,30 @@ class EventProcessor:
             formatted += f"🔗 Restaking Protocol: {protocol}\n"
             formatted += f"🔄 New Middleware: {args['newMiddleware']}\n"
             
+        return formatted
+    
+    def _format_taiyi_escrow_event(self, event_name: str, args: Dict[str, Any]) -> str:
+        """Format TaiyiEscrow contract events"""
+        formatted = ""
+        
+        if event_name == "Deposited":
+            formatted += f"👤 User: {args['user']}\n"
+            formatted += f"💰 Amount: {Web3.from_wei(args['amount'], 'ether')} ETH\n"
+            
+        elif event_name == "Withdrawn":
+            formatted += f"👤 User: {args['user']}\n"
+            formatted += f"💸 Amount: {Web3.from_wei(args['amount'], 'ether')} ETH\n"
+            
+        elif event_name == "PaymentMade":
+            execution_status = "✅ After Execution" if args['isAfterExec'] else "⏳ Pre-execution"
+            formatted += f"👤 From: {args['from']}\n"
+            formatted += f"💰 Amount: {Web3.from_wei(args['amount'], 'ether')} ETH\n"
+            formatted += f"📋 Status: {execution_status}\n"
+            
+        elif event_name == "RequestedWithdraw":
+            formatted += f"👤 User: {args['user']}\n"
+            formatted += f"💰 Requested Amount: {Web3.from_wei(args['amount'], 'ether')} ETH\n"
+        
         return formatted
     
     def _format_generic_event(self, args: Dict[str, Any]) -> str:

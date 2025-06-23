@@ -1,7 +1,7 @@
 """Core module exports"""
 
 from .web3_client import Web3Client
-from .contract_interface import RegistryContract, ContractInterface, TaiyiRegistryCoordinatorContract
+from .contract_interface import RegistryContract, ContractInterface, TaiyiRegistryCoordinatorContract, TaiyiEscrowContract
 from .event_processor import EventProcessor
 
-__all__ = ['Web3Client', 'RegistryContract', 'EventProcessor', 'ContractInterface', 'TaiyiRegistryCoordinatorContract'] 
+__all__ = ['Web3Client', 'RegistryContract', 'EventProcessor', 'ContractInterface', 'TaiyiRegistryCoordinatorContract', 'TaiyiEscrowContract'] 
