@@ -16,7 +16,7 @@ class Settings:
         self.registry_contract_address = os.getenv('REGISTRY_CONTRACT_ADDRESS')
         
         # TaiyiRegistryCoordinator contract address (optional)
-        self.taiyi_contract_address = os.getenv('TAIYI_CONTRACT_ADDRESS')
+        self.taiyi_coordinator_contract_address = os.getenv('TAIYI_COORDINATOR_CONTRACT_ADDRESS')
         
         # TaiyiEscrow contract address (optional)
         self.taiyi_escrow_contract_address = os.getenv('TAIYI_ESCROW_CONTRACT_ADDRESS')

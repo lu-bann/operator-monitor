@@ -121,13 +121,13 @@ class RegistryMonitorCLI:
         )
         
         # Add TaiyiRegistryCoordinator contract if configured
-        if self.settings.taiyi_contract_address:
+        if self.settings.taiyi_coordinator_contract_address:
             self.contract_registry.add_contract_config(
                 'taiyi_coordinator',
                 'taiyi_registry_coordinator',
-                self.settings.taiyi_contract_address
+                self.settings.taiyi_coordinator_contract_address
             )
-            logger.info(f"Added TaiyiRegistryCoordinator from environment: {self.settings.taiyi_contract_address}")
+            logger.info(f"Added TaiyiRegistryCoordinator from environment: {self.settings.taiyi_coordinator_contract_address}")
         
         # Add TaiyiEscrow contract if configured
         if self.settings.taiyi_escrow_contract_address:

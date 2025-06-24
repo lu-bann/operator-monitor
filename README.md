@@ -52,7 +52,7 @@ Configure your environment variables:
 - `REGISTRY_CONTRACT_ADDRESS` - Registry contract address
 - `RPC_URL` - Custom RPC endpoint (optional)
 ### Optional Environment Variables  
-- `TAIYI_CONTRACT_ADDRESS` - TaiyiRegistryCoordinator contract address
+- `TAIYI_COORDINATOR_CONTRACT_ADDRESS` - TaiyiRegistryCoordinator contract address
 - `TAIYI_ESCROW_CONTRACT_ADDRESS` - TaiyiEscrow contract address
 - `SLACK_BOT_TOKEN` - Slack bot token for notifications
 - `SLACK_CHANNEL` - Slack channel ID for notifications
@@ -67,7 +67,7 @@ Configure your environment variables:
 # Basic configuration
 export NETWORK=holesky
 export REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
-export TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+export TAIYI_COORDINATOR_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
 export TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 export RPC_URL=https://holesky.infura.io/v3/YOUR_PROJECT_ID
 
@@ -87,7 +87,7 @@ Create a `.env` file in the project root:
 ```bash
 NETWORK=holesky
 REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
-TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+TAIYI_COORDINATOR_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
 TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 RPC_URL=https://holesky.infura.io/v3/YOUR_PROJECT_ID
 SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
@@ -102,7 +102,7 @@ FROM_BLOCK=12345
 ```bash
 export NETWORK=mainnet
 export REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
-export TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+export TAIYI_COORDINATOR_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
 export TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 export RPC_URL=https://eth.llamarpc.com
 
@@ -118,7 +118,7 @@ python -m registry_monitor.cli.main monitor
 ```bash
 export NETWORK=mainnet
 export REGISTRY_CONTRACT_ADDRESS=0x1234567890123456789012345678901234567890
-export TAIYI_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
+export TAIYI_COORDINATOR_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdefabcdef
 export TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 export SLACK_BOT_TOKEN=xoxb-your-bot-token
 export SLACK_CHANNEL=C091L7Q0ZJN
