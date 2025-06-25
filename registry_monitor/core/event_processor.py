@@ -11,16 +11,16 @@ logger = logging.getLogger(__name__)
 class EventProcessor:
     """Processes and formats Registry events"""
     
-    def __init__(self, network_config: dict, taiyi_coordinator_address: str = None):
+    def __init__(self, network_config: dict, eigenlayer_middleware_address: str = None):
         """
         Initialize event processor
         
         Args:
             network_config: Network configuration dict
-            taiyi_coordinator_address: TaiyiRegistryCoordinator contract address for filtering
+            eigenlayer_middleware_address: EigenLayerMiddleware contract address for filtering
         """
         self.network_config = network_config
-        self.taiyi_coordinator_address = taiyi_coordinator_address.lower() if taiyi_coordinator_address else None
+        self.eigenlayer_middleware_address = eigenlayer_middleware_address.lower() if eigenlayer_middleware_address else None
         
         # SlashingType enum mapping
         self.slashing_types = {
@@ -55,10 +55,10 @@ class EventProcessor:
         """
         contract_name = event.get('contract_name', 'Unknown')
         
-        # For EigenLayer AllocationManager events, only process if AVS matches TaiyiCoordinator
+        # For EigenLayer AllocationManager events, only process if AVS matches EigenLayerMiddleware
         if contract_name == "EigenLayerAllocationManager":
-            if not self.taiyi_coordinator_address:
-                logger.warning("AllocationManager event detected but no TaiyiCoordinator address configured for filtering")
+            if not self.eigenlayer_middleware_address:
+                logger.warning("AllocationManager event detected but no EigenLayerMiddleware address configured for filtering")
                 return False
                 
             event_name = event['event']
@@ -68,8 +68,8 @@ class EventProcessor:
                 operator_set = args.get('operatorSet')
                 if operator_set:
                     avs_address = operator_set.get('avs', '').lower()
-                    if avs_address != self.taiyi_coordinator_address:
-                        logger.debug(f"Ignoring AllocationManager event for AVS {avs_address} (not TaiyiCoordinator)")
+                    if avs_address != self.eigenlayer_middleware_address:
+                        logger.debug(f"Ignoring AllocationManager event for AVS {avs_address} (not EigenLayerMiddleware)")
                         return False
         
         return True
