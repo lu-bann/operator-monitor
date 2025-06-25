@@ -315,4 +315,32 @@ EIGENLAYER_MIDDLEWARE_ABI = [
         "name": "SlasherOptedIn",
         "type": "event"
     }
+]
+
+# EigenLayer AllocationManager ABI
+EIGENLAYER_ALLOCATION_MANAGER_ABI = [
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": False, "name": "operatorSet", "type": "tuple", "components": [
+                {"name": "avs", "type": "address"},
+                {"name": "id", "type": "uint32"}
+            ]}
+        ],
+        "name": "OperatorAddedToOperatorSet",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "name": "operator", "type": "address"},
+            {"indexed": False, "name": "operatorSet", "type": "tuple", "components": [
+                {"name": "avs", "type": "address"},
+                {"name": "id", "type": "uint32"}
+            ]}
+        ],
+        "name": "OperatorRemovedFromOperatorSet",
+        "type": "event"
+    }
 ] 

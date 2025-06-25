@@ -5,7 +5,7 @@ from web3 import Web3
 from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
 
-from ..config import REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI, TAIYI_CORE_ABI, EIGENLAYER_MIDDLEWARE_ABI
+from ..config import REGISTRY_CONTRACT_ABI, TAIYI_REGISTRY_COORDINATOR_ABI, TAIYI_ESCROW_ABI, TAIYI_CORE_ABI, EIGENLAYER_MIDDLEWARE_ABI, EIGENLAYER_ALLOCATION_MANAGER_ABI
 from .web3_client import Web3Client
 
 logger = logging.getLogger(__name__)
@@ -220,4 +220,29 @@ class EigenLayerMiddlewareContract(ContractInterface):
         return [
             'RewardsHandlerSet', 'RewardsInitiatorSet', 'ValidatorsRegistered',
             'ValidatorsUnregistered', 'DelegationsBatchSet', 'SlasherOptedIn'
+        ]
+
+
+class EigenLayerAllocationManagerContract(ContractInterface):
+    """Interface for interacting with the EigenLayer AllocationManager contract"""
+    
+    def __init__(self, web3_client: Web3Client, contract_address: str):
+        """
+        Initialize EigenLayer AllocationManager contract interface
+        
+        Args:
+            web3_client: Web3Client instance
+            contract_address: The deployed EigenLayer AllocationManager contract address
+        """
+        super().__init__(
+            web3_client=web3_client,
+            contract_address=contract_address,
+            abi=EIGENLAYER_ALLOCATION_MANAGER_ABI,
+            contract_name="EigenLayerAllocationManager"
+        )
+    
+    def get_event_types(self) -> List[str]:
+        """Return EigenLayer AllocationManager-specific event types"""
+        return [
+            'OperatorAddedToOperatorSet', 'OperatorRemovedFromOperatorSet'
         ] 

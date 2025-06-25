@@ -69,6 +69,8 @@ class EventProcessor:
             formatted += self._format_taiyi_registry_coordinator_event(event_name, args)
         elif contract_name == "TaiyiEscrow":
             formatted += self._format_taiyi_escrow_event(event_name, args)
+        elif contract_name == "EigenLayerAllocationManager":
+            formatted += self._format_eigenlayer_allocation_manager_event(event_name, args)
         else:
             # Generic formatting for unknown contract types
             formatted += self._format_generic_event(args)
@@ -192,38 +194,30 @@ class EventProcessor:
         
         return formatted
     
+    def _format_eigenlayer_allocation_manager_event(self, event_name: str, args: Dict[str, Any]) -> str:
+        """Format EigenLayer AllocationManager contract events"""
+        formatted = ""
+        
+        if event_name == "OperatorAddedToOperatorSet":
+            operator_set = args['operatorSet']
+            formatted += f"👤 Operator: {args['operator']}\n"
+            formatted += f"🏢 AVS Address: {operator_set['avs']}\n"
+            formatted += f"🆔 Operator Set ID: {operator_set['id']}\n"
+            
+        elif event_name == "OperatorRemovedFromOperatorSet":
+            operator_set = args['operatorSet']
+            formatted += f"👤 Operator: {args['operator']}\n"
+            formatted += f"🏢 AVS Address: {operator_set['avs']}\n"
+            formatted += f"🆔 Operator Set ID: {operator_set['id']}\n"
+            
+        return formatted
+    
     def _format_generic_event(self, args: Dict[str, Any]) -> str:
         """Format generic events for unknown contracts"""
         formatted = "📋 Event Arguments:\n"
         for key, value in args.items():
             formatted += f"   {key}: {value}\n"
         return formatted
-    
-    def format_slack_message(self, event: Dict[str, Any]) -> str:
-        """Format an event for Slack (more concise than console output)"""
-        event_name = event['event']
-        args = event['args']
-        block_number = event['blockNumber']
-        tx_hash = event['transactionHash'].hex()
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        contract_name = event.get('contract_name', 'Unknown')
-        
-        # Get the correct block explorer URL for the network
-        block_explorer = self.network_config['block_explorer']
-        
-        # Create a more concise message for Slack
-        message = f"🔥 *{event_name}* detected on {self.network_config['name']}!\n"
-        message += f"📄 Contract: {contract_name}\n"
-        message += f"⏰ {timestamp} | 📦 Block {block_number}\n"
-        message += f"🔗 <{block_explorer}/tx/{tx_hash}|View Transaction>\n"
-        
-        # Add event-specific details (abbreviated)
-        if contract_name == "Registry":
-            message += self._format_registry_slack(event_name, args)
-        elif contract_name == "TaiyiRegistryCoordinator":
-            message += self._format_taiyi_slack(event_name, args)
-        
-        return message
     
     def _format_registry_slack(self, event_name: str, args: Dict[str, Any]) -> str:
         """Format Registry events for Slack"""
@@ -307,6 +301,24 @@ class EventProcessor:
             protocol = self.restaking_protocols.get(args['restakingProtocol'], f"Unknown({args['restakingProtocol']})")
             message += f"🔗 Protocol: {protocol}\n"
             message += f"🔄 Middleware: `{args['newMiddleware']}`"
+            
+        return message
+    
+    def _format_eigenlayer_allocation_manager_slack(self, event_name: str, args: Dict[str, Any]) -> str:
+        """Format EigenLayer AllocationManager events for Slack"""
+        message = ""
+        
+        if event_name == "OperatorAddedToOperatorSet":
+            operator_set = args['operatorSet']
+            message += f"👤 Operator: `{args['operator']}`\n"
+            message += f"🏢 AVS: `{operator_set['avs']}`\n"
+            message += f"🆔 Set ID: {operator_set['id']}"
+            
+        elif event_name == "OperatorRemovedFromOperatorSet":
+            operator_set = args['operatorSet']
+            message += f"👤 Operator: `{args['operator']}`\n"
+            message += f"🏢 AVS: `{operator_set['avs']}`\n"
+            message += f"🆔 Set ID: {operator_set['id']}"
             
         return message
     
