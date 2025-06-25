@@ -130,9 +130,6 @@ class EventMonitor:
             # Format for console display
             console_message = self.event_processor.format_event(event)
             
-            # Format for Slack (if needed)
-            slack_message = self.event_processor.format_slack_message(event)
-            
             # Send notifications through all channels
             success = self.notification_manager.send_notification(console_message, event)
             
