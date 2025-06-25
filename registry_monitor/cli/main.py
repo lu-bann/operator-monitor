@@ -215,8 +215,11 @@ class RegistryMonitorCLI:
             # Create contract instances
             self.contracts = self.contract_registry.create_contracts(self.web3_client)
             
-            # Initialize event processor
-            self.event_processor = EventProcessor(network_config)
+            # Initialize event processor with TaiyiCoordinator address for filtering
+            self.event_processor = EventProcessor(
+                network_config, 
+                taiyi_coordinator_address=self.settings.taiyi_coordinator_contract_address
+            )
             
             # Initialize notification manager
             self.notification_manager = NotificationManager()

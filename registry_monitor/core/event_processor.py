@@ -11,14 +11,16 @@ logger = logging.getLogger(__name__)
 class EventProcessor:
     """Processes and formats Registry events"""
     
-    def __init__(self, network_config: dict):
+    def __init__(self, network_config: dict, taiyi_coordinator_address: str = None):
         """
         Initialize event processor
         
         Args:
             network_config: Network configuration dict
+            taiyi_coordinator_address: TaiyiRegistryCoordinator contract address for filtering
         """
         self.network_config = network_config
+        self.taiyi_coordinator_address = taiyi_coordinator_address.lower() if taiyi_coordinator_address else None
         
         # SlashingType enum mapping
         self.slashing_types = {
@@ -40,6 +42,37 @@ class EventProcessor:
             1: "EIGENLAYER",
             2: "SYMBIOTIC"
         }
+    
+    def should_process_event(self, event: Dict[str, Any]) -> bool:
+        """
+        Check if an event should be processed based on filtering criteria
+        
+        Args:
+            event: Event data dictionary
+            
+        Returns:
+            bool: True if event should be processed, False otherwise
+        """
+        contract_name = event.get('contract_name', 'Unknown')
+        
+        # For EigenLayer AllocationManager events, only process if AVS matches TaiyiCoordinator
+        if contract_name == "EigenLayerAllocationManager":
+            if not self.taiyi_coordinator_address:
+                logger.warning("AllocationManager event detected but no TaiyiCoordinator address configured for filtering")
+                return False
+                
+            event_name = event['event']
+            args = event['args']
+            
+            if event_name in ['OperatorAddedToOperatorSet', 'OperatorRemovedFromOperatorSet']:
+                operator_set = args.get('operatorSet')
+                if operator_set:
+                    avs_address = operator_set.get('avs', '').lower()
+                    if avs_address != self.taiyi_coordinator_address:
+                        logger.debug(f"Ignoring AllocationManager event for AVS {avs_address} (not TaiyiCoordinator)")
+                        return False
+        
+        return True
     
     def format_event(self, event: Dict[str, Any]) -> str:
         """Format an event for display"""

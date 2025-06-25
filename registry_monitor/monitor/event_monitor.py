@@ -123,6 +123,11 @@ class EventMonitor:
                 logger.warning("Invalid event received, skipping")
                 return
             
+            # Check if event should be processed (filters out unwanted events)
+            if not self.event_processor.should_process_event(event):
+                logger.debug(f"Event {event['event']} filtered out, skipping")
+                return
+            
             # Store event if persistence is enabled
             if self.event_store:
                 self.event_store.store_event(event)
