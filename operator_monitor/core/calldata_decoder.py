@@ -113,8 +113,8 @@ class CalldataDecoder:
             self.contract_interface = self.web3.eth.contract(abi=[self.register_validators_abi])
             # Correct function selector based on complex BLS structure: 0x5bf6539f
             function_signature = "registerValidators((((uint256,uint256),(uint256,uint256)),(((uint256,uint256),(uint256,uint256)),((uint256,uint256),(uint256,uint256))))[])"
-            self.function_selector = self.web3.keccak(text=function_signature)[0:4]
-            logger.info(f"CalldataDecoder initialized successfully with selector: {self.function_selector.hex()}")
+            self.function_selector = self.web3.keccak(text=function_signature)[0:4].hex()
+            logger.info(f"CalldataDecoder initialized successfully with selector: {self.function_selector}")
         except Exception as e:
             logger.error(f"Error initializing CalldataDecoder: {e}")
             raise
