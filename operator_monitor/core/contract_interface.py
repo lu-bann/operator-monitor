@@ -52,7 +52,7 @@ class ContractInterface(ABC):
             for event_type in event_types:
                 if hasattr(self.contract.events, event_type):
                     event_filter = getattr(self.contract.events, event_type).create_filter(
-                        fromBlock=from_block
+                        from_block=from_block
                     )
                     event_filters.append(event_filter)
                 else:
@@ -73,8 +73,8 @@ class ContractInterface(ABC):
                 return []
                 
             event_filter = getattr(self.contract.events, event_name).create_filter(
-                fromBlock=from_block,
-                toBlock=to_block
+                from_block=from_block,
+                to_block=to_block
             )
             return event_filter.get_all_entries()
         except Exception as e:
