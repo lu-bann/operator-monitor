@@ -2,7 +2,7 @@
 
 import logging
 from web3 import Web3
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from ..config import NETWORK_CONFIGS
 
@@ -58,6 +58,73 @@ class Web3Client:
     def get_current_block(self) -> int:
         """Get current block number"""
         return self.web3.eth.block_number
+    
+    def get_transaction_by_hash(self, tx_hash: str) -> Optional[Dict[str, Any]]:
+        """
+        Get transaction details by transaction hash
+        
+        Args:
+            tx_hash: Transaction hash as hex string
+            
+        Returns:
+            Transaction data dictionary or None if not found
+        """
+        try:
+            tx = self.web3.eth.get_transaction(tx_hash)
+            # Convert HexBytes to hex strings for JSON serialization
+            return {
+                'hash': tx.hash.hex(),
+                'blockNumber': tx.blockNumber,
+                'blockHash': tx.blockHash.hex() if tx.blockHash else None,
+                'transactionIndex': tx.transactionIndex,
+                'from': tx['from'],
+                'to': tx.to,
+                'value': tx.value,
+                'gas': tx.gas,
+                'gasPrice': tx.gasPrice,
+                'input': tx.input.hex(),
+                'nonce': tx.nonce,
+                'type': tx.get('type'),
+                'chainId': tx.get('chainId')
+            }
+        except Exception as e:
+            logger.error(f"Error fetching transaction {tx_hash}: {e}")
+            return None
+    
+    def get_transaction_receipt(self, tx_hash: str) -> Optional[Dict[str, Any]]:
+        """
+        Get transaction receipt by transaction hash
+        
+        Args:
+            tx_hash: Transaction hash as hex string
+            
+        Returns:
+            Transaction receipt dictionary or None if not found
+        """
+        try:
+            receipt = self.web3.eth.get_transaction_receipt(tx_hash)
+            return {
+                'transactionHash': receipt.transactionHash.hex(),
+                'blockNumber': receipt.blockNumber,
+                'blockHash': receipt.blockHash.hex(),
+                'transactionIndex': receipt.transactionIndex,
+                'from': receipt['from'],
+                'to': receipt.to,
+                'gasUsed': receipt.gasUsed,
+                'cumulativeGasUsed': receipt.cumulativeGasUsed,
+                'status': receipt.status,
+                'logs': [
+                    {
+                        'address': log.address,
+                        'topics': [topic.hex() for topic in log.topics],
+                        'data': log.data.hex()
+                    }
+                    for log in receipt.logs
+                ]
+            }
+        except Exception as e:
+            logger.error(f"Error fetching transaction receipt {tx_hash}: {e}")
+            return None
     
     def health_check(self) -> dict:
         """Perform connection health check"""

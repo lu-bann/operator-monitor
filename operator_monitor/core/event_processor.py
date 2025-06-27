@@ -2,8 +2,10 @@
 
 import logging
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from web3 import Web3
+
+from .calldata_decoder import CalldataDecoder
 
 logger = logging.getLogger(__name__)
 
@@ -11,16 +13,23 @@ logger = logging.getLogger(__name__)
 class EventProcessor:
     """Processes and formats Registry events"""
     
-    def __init__(self, network_config: dict, eigenlayer_middleware_address: str = None):
+    def __init__(self, network_config: dict, eigenlayer_middleware_address: str = None, web3_client=None, enable_calldata_decoding: bool = True):
         """
         Initialize event processor
         
         Args:
             network_config: Network configuration dict
             eigenlayer_middleware_address: EigenLayerMiddleware contract address for filtering
+            web3_client: Web3Client instance for transaction fetching and calldata decoding
+            enable_calldata_decoding: Whether to enable transaction calldata decoding
         """
         self.network_config = network_config
         self.eigenlayer_middleware_address = eigenlayer_middleware_address.lower() if eigenlayer_middleware_address else None
+        self.web3_client = web3_client
+        self.enable_calldata_decoding = enable_calldata_decoding
+        
+        # Initialize calldata decoder if web3_client is available and decoding is enabled
+        self.calldata_decoder = CalldataDecoder(web3_client.web3) if (web3_client and enable_calldata_decoding) else None
         
         # SlashingType enum mapping
         self.slashing_types = {
@@ -97,7 +106,7 @@ class EventProcessor:
         
         # Contract-specific formatting
         if contract_name == "Registry":
-            formatted += self._format_registry_event(event_name, args)
+            formatted += self._format_registry_event(event_name, args, event)
         elif contract_name == "TaiyiRegistryCoordinator":
             formatted += self._format_taiyi_registry_coordinator_event(event_name, args)
         elif contract_name == "TaiyiEscrow":
@@ -111,7 +120,7 @@ class EventProcessor:
         formatted += f"{'='*80}\n"
         return formatted
     
-    def _format_registry_event(self, event_name: str, args: Dict[str, Any]) -> str:
+    def _format_registry_event(self, event_name: str, args: Dict[str, Any], event: Dict[str, Any] = None) -> str:
         """Format Registry contract events"""
         formatted = ""
         
@@ -119,6 +128,12 @@ class EventProcessor:
             formatted += f"📝 Registration Root: {args['registrationRoot'].hex()}\n"
             formatted += f"💰 Collateral: {Web3.from_wei(args['collateralWei'], 'ether')} ETH\n"
             formatted += f"👤 Owner: {args['owner']}\n"
+            
+            # Add transaction analysis for OperatorRegistered events
+            if event and self.eigenlayer_middleware_address:
+                tx_analysis = self._analyze_transaction_calldata(event)
+                if tx_analysis:
+                    formatted += f"\n{tx_analysis}"
             
         elif event_name == "OperatorSlashed":
             slashing_type = self.slashing_types.get(args['slashingType'], "Unknown")
@@ -354,6 +369,47 @@ class EventProcessor:
             message += f"🆔 Set ID: {operator_set['id']}"
             
         return message
+    
+    def _analyze_transaction_calldata(self, event: Dict[str, Any]) -> Optional[str]:
+        """
+        Analyze transaction calldata for Registry events
+        
+        Args:
+            event: Event data dictionary
+            
+        Returns:
+            Formatted transaction analysis string or None
+        """
+        if not self.calldata_decoder or not self.web3_client:
+            logger.debug("Calldata decoder or web3_client not available")
+            return None
+        
+        try:
+            tx_hash = event.get('transactionHash')
+            if not tx_hash:
+                logger.debug("No transaction hash in event")
+                return None
+            
+            # Convert bytes to hex string if needed
+            if hasattr(tx_hash, 'hex'):
+                tx_hash = tx_hash.hex()
+            
+            # Fetch transaction details
+            transaction = self.web3_client.get_transaction_by_hash(tx_hash)
+            if not transaction:
+                logger.debug(f"Could not fetch transaction {tx_hash}")
+                return None
+            
+            # Analyze transaction for EigenLayerMiddleware registerValidators call
+            analysis = self.calldata_decoder.analyze_transaction_for_registry_event(
+                transaction, self.eigenlayer_middleware_address
+            )
+            
+            return analysis
+            
+        except Exception as e:
+            logger.error(f"Error analyzing transaction calldata: {e}")
+            return None
     
     def validate_event(self, event: Dict[str, Any]) -> bool:
         """Validate event structure and data"""

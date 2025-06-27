@@ -15,8 +15,8 @@ from .commands import MonitorCommand, HistoryCommand, TestCommand
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -215,10 +215,12 @@ class RegistryMonitorCLI:
             # Create contract instances
             self.contracts = self.contract_registry.create_contracts(self.web3_client)
             
-            # Initialize event processor with EigenLayerMiddleware address for filtering
+            # Initialize event processor with EigenLayerMiddleware address for filtering and web3_client
             self.event_processor = EventProcessor(
                 network_config, 
-                eigenlayer_middleware_address=self.settings.eigenlayer_middleware_contract_address
+                eigenlayer_middleware_address=self.settings.eigenlayer_middleware_contract_address,
+                web3_client=self.web3_client,
+                enable_calldata_decoding=self.settings.enable_calldata_decoding
             )
             
             # Initialize notification manager

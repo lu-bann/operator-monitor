@@ -314,6 +314,36 @@ EIGENLAYER_MIDDLEWARE_ABI = [
         ],
         "name": "SlasherOptedIn",
         "type": "event"
+    },
+    {
+        "type": "function",
+        "name": "registerValidators",
+        "inputs": [
+            {
+                "name": "registrations",
+                "type": "tuple[]",
+                "components": [
+                    {
+                        "name": "pubkey",
+                        "type": "tuple",
+                        "components": [
+                            {"name": "x", "type": "uint256"},
+                            {"name": "y", "type": "uint256"}
+                        ]
+                    },
+                    {
+                        "name": "signature",
+                        "type": "tuple",
+                        "components": [
+                            {"name": "x", "type": "uint256[2]"},
+                            {"name": "y", "type": "uint256[2]"}
+                        ]
+                    }
+                ]
+            }
+        ],
+        "outputs": [{"name": "", "type": "bytes32"}],
+        "stateMutability": "payable"
     }
 ]
 

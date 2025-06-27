@@ -40,6 +40,9 @@ class Settings:
         self.use_reconnection = os.getenv('USE_RECONNECTION', 'true').lower() in ('true', '1', 'yes', 'y')
         self.chunk_size = int(os.getenv('CHUNK_SIZE', '50000'))
         
+        # Calldata decoding configuration
+        self.enable_calldata_decoding = os.getenv('ENABLE_CALLDATA_DECODING', 'true').lower() in ('true', '1', 'yes', 'y')
+        
     def validate(self):
         """Validate required settings"""
         if not self.registry_contract_address or self.registry_contract_address == "0x0000000000000000000000000000000000000000":
