@@ -1,4 +1,4 @@
-"""New entry point for the Registry Event Monitor"""
+"""New entry point for the Operator Monitor"""
 
 import asyncio
 import logging

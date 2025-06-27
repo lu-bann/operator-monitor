@@ -1,8 +1,8 @@
-"""Registry Event Monitor - Modular Implementation"""
+"""Operator Monitor - Modular Implementation"""
 
 __version__ = "2.0.0"
-__author__ = "Registry Event Monitor Team"
-__description__ = "Modular Ethereum Registry contract event monitoring system"
+__author__ = "Operator Monitor Team"
+__description__ = "Modular Ethereum operator and registry contract event monitoring system"
 
 # Main exports
 from .cli import main

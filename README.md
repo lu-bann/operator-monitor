@@ -1,6 +1,6 @@
-# Registry Event Monitor
+# Operator Monitor
 
-A comprehensive monitoring system for blockchain registry contracts, supporting both traditional Registry contracts and the new TaiyiRegistryCoordinator contracts.
+A comprehensive monitoring system for blockchain operator and registry contracts, supporting both traditional Registry contracts and the new TaiyiRegistryCoordinator contracts.
 
 ## Features
 
@@ -106,7 +106,7 @@ export TAIYI_COORDINATOR_CONTRACT_ADDRESS=0xabcdefabcdefabcdefabcdefabcdefabcdef
 export TAIYI_ESCROW_CONTRACT_ADDRESS=0x9876543210987654321098765432109876543210
 export RPC_URL=https://eth.llamarpc.com
 
-python -m registry_monitor.cli.main monitor
+python -m operator_monitor.cli.main monitor
 ```
 
 ### Commands
@@ -125,13 +125,13 @@ export SLACK_CHANNEL=C091L7Q0ZJN
 export SHOW_HISTORY=true
 export FROM_BLOCK=18000000
 
-python -m registry_monitor.cli.main monitor
+python -m operator_monitor.cli.main monitor
 ```
 
 ### Programmatic Usage
 ```python
 import asyncio
-from registry_monitor.cli.main import RegistryMonitorCLI
+from operator_monitor.cli.main import RegistryMonitorCLI
 
 async def main():
     cli = RegistryMonitorCLI()

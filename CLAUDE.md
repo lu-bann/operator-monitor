@@ -6,7 +6,7 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 
 This repository contains two main Python components for blockchain monitoring and validator management:
 
-1. **Registry Event Monitor** (`registry_monitor/`): Advanced Python-based blockchain event monitoring system
+1. **Operator Monitor** (`operator-monitor/`): Advanced Python-based blockchain event monitoring system
 2. **Operator Status Tools** (`operator-status/`): Helix validator delegation checking and status tools
 
 ## Development Commands
@@ -17,22 +17,22 @@ This repository contains two main Python components for blockchain monitoring an
 pip install -e .
 
 # Verify installation
-python -c "import registry_monitor; print('Registry Monitor installed')"
+python -c "import operator_monitor; print('Operator Monitor installed')"
 ```
 
-### Registry Event Monitor
+### Operator Monitor
 ```bash
 # Run live event monitoring
-python -m registry_monitor.cli.main monitor
+python -m operator_monitor.cli.main monitor
 
 # Fetch historical events for analysis
-python -m registry_monitor.cli.main history <from_block> [to_block] [max_events]
+python -m operator_monitor.cli.main history <from_block> [to_block] [max_events]
 
 # Test configuration and connectivity
-python -m registry_monitor.cli.main test
+python -m operator_monitor.cli.main test
 
 # Examples with specific configurations
-NETWORK=holesky REGISTRY_CONTRACT_ADDRESS=0x... python -m registry_monitor.cli.main monitor
+NETWORK=holesky REGISTRY_CONTRACT_ADDRESS=0x... python -m operator_monitor.cli.main monitor
 ```
 
 ### Operator Status Tools
@@ -55,30 +55,30 @@ cd operator-status && python main.py check 0x8a1d... --format json
 
 ## Architecture Overview
 
-### Registry Event Monitor Architecture
+### Operator Monitor Architecture
 
 **Core Philosophy**: Modular, extensible event monitoring with pluggable contract support and notification systems.
 
 **Module Structure**:
-- `registry_monitor/core/`: Blockchain interaction and contract interfaces
+- `operator-monitor/core/`: Blockchain interaction and contract interfaces
   - `web3_client.py`: Web3 connection management with retry logic
   - `contract_interface.py`: Multi-contract interface system (Registry, Taiyi, EigenLayer)
   - `event_processor.py`: Event parsing, formatting, and enrichment
-- `registry_monitor/monitor/`: Real-time monitoring engine
+- `operator-monitor/monitor/`: Real-time monitoring engine
   - `event_monitor.py`: Async event monitoring with filter management
   - `reconnection_handler.py`: Automatic reconnection on network failures
-- `registry_monitor/notifications/`: Multi-channel notification system
+- `operator-monitor/notifications/`: Multi-channel notification system
   - `console_notifier.py`: Rich terminal output with formatting
   - `slack_notifier.py`: Slack integration for team notifications
   - `notification_manager.py`: Orchestrates multiple notification channels
-- `registry_monitor/data/`: Event data management
+- `operator-monitor/data/`: Event data management
   - `event_fetcher.py`: Historical and real-time event retrieval
   - `event_store.py`: In-memory and persistent storage abstractions
-- `registry_monitor/config/`: Configuration and network management
+- `operator-monitor/config/`: Configuration and network management
   - `settings.py`: Environment-based configuration
   - `networks.py`: Multi-network support (Mainnet, Holesky, testnets)
   - `contract_abi.py`: ABI definitions for supported contracts
-- `registry_monitor/cli/`: Command-line interface
+- `operator-monitor/cli/`: Command-line interface
   - `main.py`: Main CLI entry point with command routing
   - `commands.py`: Individual command implementations
 
@@ -182,11 +182,11 @@ POSTGRES_PASSWORD=postgres                # Database password
 
 ### Python Component Testing
 ```bash
-# Registry Monitor integration tests
-python -m registry_monitor.cli.main test
+# Operator Monitor integration tests
+python -m operator_monitor.cli.main test
 
 # Test specific network configurations
-NETWORK=holesky python -m registry_monitor.cli.main test
+NETWORK=holesky python -m operator_monitor.cli.main test
 
 # Operator status tool validation
 cd operator-status && python main.py check 0x... --verbose
@@ -229,11 +229,11 @@ cd operator-status && python main.py check 0x... --verbose
 NETWORK=mainnet \
 REGISTRY_CONTRACT_ADDRESS=0x... \
 SLACK_BOT_TOKEN=... \
-python -m registry_monitor.cli.main monitor
+python -m operator_monitor.cli.main monitor
 
 # Background service with systemd
-sudo systemctl enable registry-monitor
-sudo systemctl start registry-monitor
+sudo systemctl enable operator-monitor
+sudo systemctl start operator-monitor
 ```
 
 ### Operational Monitoring
@@ -254,16 +254,16 @@ sudo systemctl start registry-monitor
 
 ### Common Issues
 
-**Registry Monitor Connection Problems**:
+**Operator Monitor Connection Problems**:
 ```bash
 # Check network connectivity
-python -m registry_monitor.cli.main test
+python -m operator_monitor.cli.main test
 
 # Verify contract addresses
 echo $REGISTRY_CONTRACT_ADDRESS
 
 # Test with alternative RPC
-RPC_URL=https://alternative-rpc.com python -m registry_monitor.cli.main test
+RPC_URL=https://alternative-rpc.com python -m operator_monitor.cli.main test
 ```
 
 **Operator Status Database Issues**:

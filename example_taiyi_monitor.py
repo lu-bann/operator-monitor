@@ -18,7 +18,7 @@ Usage:
 
 import asyncio
 import os
-from registry_monitor.cli.main import RegistryMonitorCLI
+from operator_monitor.cli.main import RegistryMonitorCLI
 
 async def main():
     """Main function to run the TaiyiRegistryCoordinator monitor"""
