@@ -10,6 +10,7 @@ from ..core import Web3Client, ContractInterface, EventProcessor, TaiyiRegistryC
 from ..core.contract_interface import RegistryContract
 from ..notifications import ConsoleNotifier, SlackNotifier, NotificationManager
 from ..data import EventFetcher, InMemoryEventStore, NullEventStore
+from ..data.redis_event_store import RedisEventStore
 from ..monitor import EventMonitor, ReconnectionHandler
 from .commands import MonitorCommand, HistoryCommand, TestCommand
 
@@ -241,13 +242,32 @@ class RegistryMonitorCLI:
             # Initialize event store
             event_store = InMemoryEventStore(max_events=1000)
             
+            # Initialize Redis store if enabled
+            redis_store = None
+            if self.settings.enable_redis_storage:
+                try:
+                    redis_store = RedisEventStore(
+                        redis_url=self.settings.redis_url,
+                        key_prefix=self.settings.redis_key_prefix,
+                        timeout=self.settings.redis_timeout
+                    )
+                    if redis_store.connect():
+                        logger.info("Redis validator store enabled")
+                    else:
+                        logger.warning("Redis connection failed, disabling Redis storage")
+                        redis_store = None
+                except Exception as e:
+                    logger.error(f"Error initializing Redis store: {e}")
+                    redis_store = None
+            
             # Initialize event monitor
             self.event_monitor = EventMonitor(
                 web3_client=self.web3_client,
                 contracts=self.contracts,
                 event_processor=self.event_processor,
                 notification_manager=self.notification_manager,
-                event_store=event_store
+                event_store=event_store,
+                redis_store=redis_store
             )
             
             logger.info("All components initialized successfully")

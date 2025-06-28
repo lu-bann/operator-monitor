@@ -43,6 +43,12 @@ class Settings:
         # Calldata decoding configuration
         self.enable_calldata_decoding = os.getenv('ENABLE_CALLDATA_DECODING', 'true').lower() in ('true', '1', 'yes', 'y')
         
+        # Redis configuration for validator storage
+        self.redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+        self.enable_redis_storage = os.getenv('ENABLE_REDIS_STORAGE', 'false').lower() in ('true', '1', 'yes', 'y')
+        self.redis_key_prefix = os.getenv('REDIS_KEY_PREFIX', 'validators_by_operator')
+        self.redis_timeout = int(os.getenv('REDIS_TIMEOUT', '5'))
+        
     def validate(self):
         """Validate required settings"""
         if not self.registry_contract_address or self.registry_contract_address == "0x0000000000000000000000000000000000000000":

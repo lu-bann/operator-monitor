@@ -8,6 +8,7 @@ from ..core.contract_interface import ContractInterface
 from ..core.event_processor import EventProcessor
 from ..notifications.notification_manager import NotificationManager
 from ..data.event_store import EventStoreInterface
+from ..data.redis_event_store import RedisEventStore
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class EventMonitor:
     
     def __init__(self, web3_client: Web3Client, contracts: Union[ContractInterface, List[ContractInterface]],
                  event_processor: EventProcessor, notification_manager: NotificationManager,
-                 event_store: EventStoreInterface = None):
+                 event_store: EventStoreInterface = None, redis_store: RedisEventStore = None):
         """
         Initialize event monitor
         
@@ -27,6 +28,7 @@ class EventMonitor:
             event_processor: EventProcessor instance
             notification_manager: NotificationManager instance
             event_store: Optional event store for persistence
+            redis_store: Optional Redis store for validator-operator mapping
         """
         self.web3_client = web3_client
         # Ensure contracts is always a list
@@ -34,9 +36,11 @@ class EventMonitor:
         self.event_processor = event_processor
         self.notification_manager = notification_manager
         self.event_store = event_store
+        self.redis_store = redis_store
         
         contract_names = [c.contract_name for c in self.contracts]
-        logger.info(f"Event monitor initialized with contracts: {', '.join(contract_names)}")
+        redis_status = "enabled" if redis_store else "disabled"
+        logger.info(f"Event monitor initialized with contracts: {', '.join(contract_names)}, Redis: {redis_status}")
     
     async def listen_for_events(self, from_block='latest', poll_interval: int = 2):
         """
@@ -132,6 +136,10 @@ class EventMonitor:
             if self.event_store:
                 self.event_store.store_event(event)
             
+            # Handle Redis storage for operator-validator mapping
+            if self.redis_store:
+                await self._handle_redis_storage(event)
+            
             # Format for console display
             console_message = self.event_processor.format_event(event)
             
@@ -146,6 +154,26 @@ class EventMonitor:
         except Exception as e:
             logger.error(f"Error processing event: {e}")
             print(f"Raw event: {event}")
+    
+    async def _handle_redis_storage(self, event: Dict[str, Any]):
+        """Handle Redis storage for validator-operator mapping"""
+        try:
+            # Extract operator-validator mapping from Registry OperatorRegistered events
+            mapping = self.event_processor.get_operator_validator_mapping(event)
+            
+            if mapping:
+                operator_address, validator_pubkeys = mapping
+                
+                # Store in Redis
+                success = self.redis_store.store_operator_validators(operator_address, validator_pubkeys)
+                
+                if success:
+                    logger.info(f"Stored {len(validator_pubkeys)} validators for operator {operator_address} in Redis")
+                else:
+                    logger.warning(f"Failed to store validators for operator {operator_address} in Redis")
+            
+        except Exception as e:
+            logger.error(f"Error handling Redis storage: {e}")
     
     def get_status(self) -> Dict[str, Any]:
         """Get monitor status information"""
@@ -168,6 +196,7 @@ class EventMonitor:
                 'network': health.get('network'),
                 'active_notifiers': active_notifiers,
                 'event_store_enabled': self.event_store is not None,
+                'redis_store_enabled': self.redis_store is not None,
                 'contracts': contract_info
             }
         except Exception as e:

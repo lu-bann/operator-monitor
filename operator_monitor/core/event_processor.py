@@ -411,6 +411,80 @@ class EventProcessor:
             logger.error(f"Error analyzing transaction calldata: {e}")
             return None
     
+    def get_operator_validator_mapping(self, event: Dict[str, Any]) -> Optional[tuple]:
+        """
+        Extract operator address and validator public keys from Registry OperatorRegistered event
+        
+        Args:
+            event: Event data dictionary
+            
+        Returns:
+            Tuple of (operator_address, validator_pubkeys) or None if not applicable
+        """
+        if not self.calldata_decoder or not self.web3_client:
+            logger.debug("Calldata decoder or web3_client not available")
+            return None
+        
+        # Only process Registry OperatorRegistered events
+        if (event.get('contract_name') != 'Registry' or 
+            event.get('event') != 'OperatorRegistered'):
+            return None
+        
+        try:
+            tx_hash = event.get('transactionHash')
+            if not tx_hash:
+                logger.debug("No transaction hash in event")
+                return None
+            
+            # Convert bytes to hex string if needed
+            if hasattr(tx_hash, 'hex'):
+                tx_hash = tx_hash.hex()
+            
+            # Fetch transaction details
+            transaction = self.web3_client.get_transaction_by_hash(tx_hash)
+            if not transaction:
+                logger.debug(f"Could not fetch transaction {tx_hash}")
+                return None
+            
+            # Extract operator address from transaction sender
+            operator_address = transaction.get('from')
+            if not operator_address:
+                logger.debug("No 'from' address in transaction")
+                return None
+            
+            # Check if transaction was sent to EigenLayerMiddleware
+            to_address = transaction.get('to', '').lower()
+            if (self.eigenlayer_middleware_address and 
+                to_address != self.eigenlayer_middleware_address):
+                logger.debug(f"Transaction not sent to EigenLayerMiddleware: {to_address}")
+                return None
+            
+            # Decode calldata to extract validator public keys
+            calldata = transaction.get('input', '0x')
+            decoded = self.calldata_decoder.decode_register_validators_calldata(calldata)
+            
+            if not decoded or not decoded.get('registrations'):
+                logger.debug("No registerValidators calldata found or no registrations")
+                return None
+            
+            # Extract validator public keys
+            validator_pubkeys = []
+            for registration in decoded['registrations']:
+                pubkey_hex = registration.get('pubkey_hex')
+                if pubkey_hex:
+                    validator_pubkeys.append(pubkey_hex)
+            
+            if not validator_pubkeys:
+                logger.debug("No validator public keys found in calldata")
+                return None
+            
+            logger.info(f"Extracted {len(validator_pubkeys)} validators for operator {operator_address}")
+            return (operator_address, validator_pubkeys)
+            
+        except Exception as e:
+            logger.error(f"Error extracting operator-validator mapping: {e}")
+            return None
+    
     def validate_event(self, event: Dict[str, Any]) -> bool:
         """Validate event structure and data"""
         try:
