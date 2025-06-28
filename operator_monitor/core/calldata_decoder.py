@@ -308,7 +308,8 @@ class CalldataDecoder:
                         pubkey_data['x']['a'], pubkey_data['x']['b'],
                         pubkey_data['y']['a'], pubkey_data['y']['b']
                     )
-                    pubkey_hex = f"0x{compressed_x_a:064x}{compressed_x_b:064x}"
+                    # Format as hex without leading zeros (except for 0x prefix)
+                    pubkey_hex = f"0x{compressed_x_a:x}{compressed_x_b:064x}"
                     
                     # Create full signature hex representation
                     signature_hex = f"0x{signature_data['x']['c0']['a']:064x}{signature_data['x']['c0']['b']:064x}{signature_data['x']['c1']['a']:064x}{signature_data['x']['c1']['b']:064x}{signature_data['y']['c0']['a']:064x}{signature_data['y']['c0']['b']:064x}{signature_data['y']['c1']['a']:064x}{signature_data['y']['c1']['b']:064x}"
@@ -359,7 +360,7 @@ class CalldataDecoder:
             
             # Compress the point
             compressed_x_a, compressed_x_b = BLSUtils.compress_g1_point(x_a, x_b, y_a, y_b)
-            compressed_hex = f"{compressed_x_a:064x}{compressed_x_b:064x}"
+            compressed_hex = f"{compressed_x_a:x}{compressed_x_b:064x}"
             
             if truncate:
                 return f"0x{compressed_hex[:8]}...{compressed_hex[-8:]}"
