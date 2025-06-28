@@ -14,7 +14,7 @@ pip install -e .
 **Run the CLI**:
 ```bash
 # Check single validator delegation status
-python main.py check 0x8a1d7b8dd64e0aafe7ea7b6c95065c9364cf99d38470db679bdf5c9bed34755c947c6c3cdb2f4a66dd4d31aae7e23d7a
+python main.py validator-delegation 0x8a1d7b8dd64e0aafe7ea7b6c95065c9364cf99d38470db679bdf5c9bed34755c947c6c3cdb2f4a66dd4d31aae7e23d7a
 
 # Batch check validators from file
 python main.py batch validators.txt

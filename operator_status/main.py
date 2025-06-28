@@ -123,8 +123,8 @@ def create_validator_info_table(info: ValidatorInfo) -> Table:
 
 
 
-@app.command()
-def check(
+@app.command(name="validator-delegation")
+def validator_delegation(
     validator_key: str = typer.Argument(..., help="Validator public key (hex, with or without 0x prefix)"),
     redis: str = typer.Option("redis://localhost:6379", help="Redis connection URL"),
     format: str = typer.Option("table", help="Output format: table, json"),
