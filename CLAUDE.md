@@ -221,6 +221,94 @@ cd operator-status && python main.py check 0x... --verbose
 - **Console Output**: Rich terminal display with color coding and progress indicators
 - **Structured Logging**: Comprehensive logging for debugging and audit trails
 
+## Docker Deployment
+
+### Quick Start with Docker Compose
+```bash
+# Clone the repository and navigate to project root
+cd /path/to/luban/monitor
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your RPC URLs and contract addresses
+
+# Start all services (Redis, PostgreSQL, HTTP API, Monitor)
+docker-compose up -d
+
+# Check service health
+docker-compose ps
+docker-compose logs -f operator-status-api
+
+# Access the API
+curl http://localhost:8000/health
+curl http://localhost:8000/docs  # Swagger UI
+```
+
+### Docker Services Architecture
+- **redis**: Redis 7 Alpine for delegation message caching and operator-validator mappings
+- **postgres**: PostgreSQL 15 Alpine with initialized schema for validator registration data  
+- **operator-status-api**: FastAPI HTTP server exposing REST API endpoints
+- **operator-monitor**: Blockchain event monitoring service (optional, configure with contract addresses)
+
+### Environment Configuration
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Required variables for operator monitoring
+NETWORK=holesky
+RPC_URL=https://ethereum-holesky.publicnode.com
+REGISTRY_CONTRACT_ADDRESS=0x...
+
+# Optional contract addresses
+TAIYI_COORDINATOR_CONTRACT_ADDRESS=0x...
+EIGENLAYER_MIDDLEWARE_CONTRACT_ADDRESS=0x...
+
+# Redis and PostgreSQL use docker-compose defaults
+```
+
+### Individual Service Management
+```bash
+# Build custom image
+docker build -t operator-monitor .
+
+# Run HTTP API only
+docker run -p 8000:8000 \
+  -e REDIS_URL=redis://host.docker.internal:6379 \
+  -e POSTGRES_HOST=host.docker.internal \
+  operator-monitor
+
+# Run blockchain monitor only
+docker run --network operator-monitor-network \
+  -e REDIS_URL=redis://redis:6379 \
+  -e REGISTRY_CONTRACT_ADDRESS=0x... \
+  operator-monitor \
+  python -m operator_monitor.cli.main monitor
+
+# Production deployment with custom config
+docker run -d --name operator-api \
+  --network operator-monitor-network \
+  -p 8000:8000 \
+  -v /path/to/logs:/app/logs \
+  -e LOG_LEVEL=info \
+  operator-monitor
+```
+
+### Data Persistence and Backups
+```bash
+# View persistent volumes
+docker volume ls | grep operator-monitor
+
+# Backup PostgreSQL data
+docker exec operator-monitor-postgres pg_dump -U postgres helix_mev_relayer > backup.sql
+
+# Backup Redis data
+docker exec operator-monitor-redis redis-cli BGSAVE
+
+# Restore PostgreSQL data
+cat backup.sql | docker exec -i operator-monitor-postgres psql -U postgres -d helix_mev_relayer
+```
+
 ## Deployment and Operations
 
 ### Production Monitoring Setup

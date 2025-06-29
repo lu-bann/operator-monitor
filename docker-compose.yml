@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Operator Status HTTP Server
+  operator-status-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: operator-status-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Redis configuration
+      REDIS_URL: redis://redis:6379
+      REDIS_TIMEOUT: 5
+      REDIS_KEY_PREFIX: validators_by_operator
+      
+      # PostgreSQL configuration
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: helix_mev_relayer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      
+      # Server configuration
+      HOST: 0.0.0.0
+      PORT: 8000
+      LOG_LEVEL: info
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - operator-network
+    volumes:
+      - ./logs:/app/logs
+
+  # Operator Monitor (Blockchain Event Monitoring)
+  operator-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: operator-monitor
+    restart: unless-stopped
+    environment:
+      # Network and RPC configuration
+      NETWORK: holesky
+      RPC_URL: ${RPC_URL:-https://ethereum-holesky.publicnode.com}
+      
+      # Contract addresses (set via environment variables)
+      REGISTRY_CONTRACT_ADDRESS: ${REGISTRY_CONTRACT_ADDRESS}
+      TAIYI_COORDINATOR_CONTRACT_ADDRESS: ${TAIYI_COORDINATOR_CONTRACT_ADDRESS}
+      TAIYI_ESCROW_CONTRACT_ADDRESS: ${TAIYI_ESCROW_CONTRACT_ADDRESS}
+      TAIYI_CORE_CONTRACT_ADDRESS: ${TAIYI_CORE_CONTRACT_ADDRESS}
+      EIGENLAYER_MIDDLEWARE_CONTRACT_ADDRESS: ${EIGENLAYER_MIDDLEWARE_CONTRACT_ADDRESS}
+      
+      # Redis configuration for storing operator-validator mappings
+      REDIS_URL: redis://redis:6379
+      ENABLE_REDIS_STORAGE: "true"
+      REDIS_KEY_PREFIX: validators_by_operator
+      REDIS_TIMEOUT: 5
+      
+      # Monitoring configuration
+      SHOW_HISTORY: "true"
+      FROM_BLOCK: ${FROM_BLOCK:-0}
+      USE_RECONNECTION: "true"
+      CHECK_INTERVAL_SECONDS: 10
+      
+      # Slack notifications (optional)
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_CHANNEL: ${SLACK_CHANNEL}
+      
+      # Logging
+      LOG_LEVEL: info
+    command: ["python", "-m", "operator_monitor.cli.main", "monitor"]
+    networks:
+      - operator-network
+    volumes:
+      - ./logs:/app/logs
+
+networks:
+  operator-network:
+    driver: bridge
+    name: operator-monitor-network
+

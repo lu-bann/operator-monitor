@@ -44,6 +44,27 @@ python start_server.py config
 python start_server.py start --reload --log-level debug
 ```
 
+**Run with Docker**:
+```bash
+# Build the Docker image
+docker build -t operator-monitor .
+
+# Run operator-status HTTP server only
+docker run -p 8000:8000 -e REDIS_URL=redis://host.docker.internal:6379 operator-monitor
+
+# Run full stack with docker-compose (recommended)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f operator-status-api
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (WARNING: destroys data)
+docker-compose down -v
+```
+
 ## Project Architecture
 
 **Purpose**: Helix validator delegation checker that queries Redis for delegation messages and PostgreSQL for validator registration status. Provides both CLI and HTTP API interfaces.
