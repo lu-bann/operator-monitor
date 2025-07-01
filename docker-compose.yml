@@ -6,28 +6,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
     container_name: operator-status-api
     restart: unless-stopped
     ports:
       - "8000:8000"
-    environment:
-      # Redis configuration
-      REDIS_URL: redis://redis:6379
-      REDIS_TIMEOUT: 5
-      REDIS_KEY_PREFIX: validators_by_operator
-      
-      # PostgreSQL configuration
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: helix_mev_relayer
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      
-      # Server configuration
-      HOST: 0.0.0.0
-      PORT: 8000
-      LOG_LEVEL: info
+    command: [
+      "python", "operator_status/start_server.py", "start",
+      "--host", "0.0.0.0",
+      "--port", "8000",
+      "--log-level", "info",
+      "--redis-url", "${REDIS_URL:-redis://localhost:6379}",
+      "--redis-timeout", "${REDIS_TIMEOUT:-5}",
+      "--redis-key-prefix", "${REDIS_KEY_PREFIX:-validators_by_operator}",
+      "--postgres-host", "${POSTGRES_HOST:-localhost}",
+      "--postgres-port", "${POSTGRES_PORT:-5432}",
+      "--postgres-db", "${POSTGRES_DB:-helix_mev_relayer}",
+      "--postgres-user", "${POSTGRES_USER:-postgres}",
+      "--postgres-password", "${POSTGRES_PASSWORD:-postgres}"
+    ]
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
       interval: 30s

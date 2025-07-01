@@ -99,13 +99,16 @@ class EventMonitor:
         """Process a single event filter"""
         try:
             for event in event_filter.get_new_entries():
-                # Try to identify which contract this event came from
-                event_contract = self._identify_contract_for_event(event)
-                if event_contract:
-                    event['contract_name'] = event_contract.contract_name
-                    event['contract_address'] = event_contract.contract_address
+                # Convert AttributeDict to regular dict to allow modifications
+                event_dict = dict(event)
                 
-                await self.handle_event(event)
+                # Try to identify which contract this event came from
+                event_contract = self._identify_contract_for_event(event_dict)
+                if event_contract:
+                    event_dict['contract_name'] = event_contract.contract_name
+                    event_dict['contract_address'] = event_contract.contract_address
+                
+                await self.handle_event(event_dict)
         except Exception as e:
             logger.error(f"Error processing filter: {e}")
     
